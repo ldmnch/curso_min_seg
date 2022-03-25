@@ -1,6 +1,5 @@
----
-title: "Intro a R"
----
+
+# "Intro a R"
 
 # Presentacion 
 
