@@ -1,0 +1,10 @@
+"0","```r
+
+if (ultima.actualiz.base == Sys.Date()) {
+    \"Datos al día de hoy\"
+} else{
+  Sys.Date() - ultima.actualiz.base 
+}
+```"
+"1","Time difference of 13 days
+"

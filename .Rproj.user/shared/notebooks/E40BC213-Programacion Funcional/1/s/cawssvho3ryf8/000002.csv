@@ -1,0 +1,10 @@
+"0","```r
+calcula_ratio <- function(vector) {
+  
+vector.max  <-   max(vector)
+vector.min  <-   min(vector)
+
+return(vector.max/vector.min)
+}
+
+```"

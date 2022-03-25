@@ -1,0 +1,17 @@
+"0","```r
+for(categoria in clasificacion.casos){
+   
+base.filtrada  <- base.covid %>% 
+    filter(clasificacion_resumen  == categoria)  
+    
+if(categoria!= \"Sin Clasificar\"){ #No grafico los \"Sin Clasificar\"
+  
+hist(x = base.filtrada$edad,
+     main = categoria,
+     xlab = \"Edad\",
+     xlim = c(0,130))
+
+}
+
+}
+```"

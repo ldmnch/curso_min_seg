@@ -1,0 +1,7 @@
+"0","```r
+calcula_ratio(vector = c(456,78,1232,6565,12,0))
+```"
+"1","Mensaje: Hay un cero en tu vector, no lo tomo en cuenta para el calculo
+"
+"1","[1] 547.0833
+"

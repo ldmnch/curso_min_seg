@@ -1,0 +1,13 @@
+"0","```r
+Otra_funcion_prueba <- function(parametro1,
+                                parametro2 = \"colgado\") {
+ 
+   paste(parametro1, parametro2, sep = \", \")
+  
+}
+
+
+Otra_funcion_prueba(parametro1 = \"Hola\")
+```"
+"1","[1] \"Hola, colgado\"
+"

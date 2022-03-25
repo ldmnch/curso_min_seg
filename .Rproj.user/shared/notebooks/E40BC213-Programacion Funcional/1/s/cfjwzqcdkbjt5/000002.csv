@@ -1,0 +1,4 @@
+"0","```r
+library(tidyverse)
+base.covid <- readRDS('../Fuentes/base_covid_sample.RDS')
+```"

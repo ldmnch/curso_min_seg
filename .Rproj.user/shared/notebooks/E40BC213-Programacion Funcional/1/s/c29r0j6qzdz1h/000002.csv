@@ -1,0 +1,7 @@
+"0","```r
+clasificacion.casos<- unique(base.covid$clasificacion_resumen)
+clasificacion.casos
+```"
+"1","[1] \"Descartado\"     \"Confirmado\"     \"Sospechoso\"    
+[4] \"Sin Clasificar\"
+"

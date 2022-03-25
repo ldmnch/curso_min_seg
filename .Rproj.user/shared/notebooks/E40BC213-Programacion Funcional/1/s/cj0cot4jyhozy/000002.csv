@@ -1,0 +1,20 @@
+"0","```r
+calcula_ratio <- function(vector) {
+  
+assertthat::assert_that(is.numeric(vector),
+                        msg = \"Ingresa un vector numérico\")
+  
+if(any(vector==0)){
+
+  warning(\"Mensaje: Hay un cero en tu vector, no lo tomo en cuenta para el calculo\")
+  vector <- vector[vector!=0]
+  
+}
+vector.max  <-   max(vector)
+vector.min  <-   min(vector)
+
+
+return(vector.max/vector.min)
+}
+
+```"

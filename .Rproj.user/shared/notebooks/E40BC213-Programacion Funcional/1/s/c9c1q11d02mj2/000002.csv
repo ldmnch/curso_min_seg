@@ -1,0 +1,6 @@
+"0","```r
+calcula_ratio(vector = c(1,2,3,4,\"H\"))
+```"
+"1","Error in vector.max/vector.min : 
+  argumento no-numérico para operador binario
+"

@@ -1,0 +1,18 @@
+"0","```r
+calcula_ratio <- function(vector) {
+  
+assertthat::assert_that(is.numeric(vector),
+                        msg = \"Ingresa un vector numérico\")
+  
+
+vector.max  <-   max(vector)
+vector.min  <-   min(vector)
+
+
+return(vector.max/vector.min)
+}
+
+calcula_ratio(vector = c(1,2,3,4,\"H\"))
+```"
+"1","Error: Ingresa un vector numérico
+"

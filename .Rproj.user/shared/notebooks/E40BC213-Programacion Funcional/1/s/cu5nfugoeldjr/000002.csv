@@ -1,0 +1,12 @@
+"0","```r
+for(categoria in c(\"SI\",\"NO\")){
+   
+base.filtrada  <- base.covid %>% 
+    filter(fallecido  == categoria)  
+    
+hist(x = base.filtrada$edad,
+     main = paste0(\"Fallecido: \",categoria),
+     xlab = \"Edad\",
+     xlim = c(0,130))
+}
+```"
