@@ -48,27 +48,25 @@ library(tidyverse)
 
 Más arriba mencionamos que el paquete `magrittr` introduce la pipe y la señalamos como este símbolo `%>%`. La pipe es una **forma de escribir** del mundo tidyverse, que indica que vamos a realizar de terminada operación sobre el objeto que está a la izquierda. Sirve para indicar una secuencia de acciones. 
 
-Por ejemplo, tomemos la base de datos del SNIC a nivel provincial. Supongamos que queremos obtener la media de cantidad de hechos de todos los tipos de delito en todas las provincias.### ESTO NOCAMBIAR!!! Sin el pipe, lo haríamos así: 
+Por ejemplo, tomemos la base de datos de homicidios dolosos entre 2017 y 2020. Para sacar la tabla de frecuencias de casos por provincia haríamos lo siguiente: 
 ```{r}
-robos_autos <- read.table("./data/dnrpa-robos-recuperos-autos-202109.csv", sep = ",", 
-                        header = TRUE, encoding = "UTF-8", stringsAsFactors = F)
+df <- readxl::read_excel('./data/Integrado_HD_base_usuaria_2017-2020.xlsx')
 
-table(robos_autos$titular_genero)
+table(df$provincia)
 ```
 
 Ahora, con una pipe...
 ```{r}
-robos_autos$titular_genero %>%
-        table()
+df$provincia %>%
+ table()
 ```
 
 Las funciones pueden concatenarse, y esta es la principal gracia del uso de las pipes. 
 
 ```{r}
-robos_autos$titular_genero%>%
+df$provincia%>%
         table()%>%
-        prop.table()%>%
-        round(., 2)
+        prop.table()*100
 ```
 
 
@@ -86,28 +84,44 @@ Todas pueden ser usadas en conjunto con `group_by()` que cambia el objeto de cad
 
 ### select()
 
-- Esta función únicamente requiere poner el nombre de las columnas que elegimos.
-  +Para seleccionar un intervalo de columnas, uso el `:`
+- Esta función únicamente requiere poner el nombre de las columnas que elegimos. Podemos elegir según nombre o posición. 
+- La forma básica de esta función es `select(nombre_de_la_columna)`.
 
 ```{r}
-select_prueba_1 <- robos_autos %>% select(tramite_fecha, fecha_inscripcion_inicial, registro_seccional_codigo:registro_seccional_provincia)
-
+select_prueba_1 <- df %>% select(provincia)
 head(select_prueba_1)
+```
+- Puedo seleccionar más de una columna con la coma: 
+
+```{r}
+select_prueba_2 <- df %>% select(provincia, departamento, anio)
+
+head(select_prueba_2)
+```
+
+- También se puede seleccionar un intervalo de columnas, usando el `:`
+
+```{r}
+select_prueba_3 <- df %>% select(anio, departamento, provincia, tipo_lugar:otro_motivo_origen_registro)
+
+head(select_prueba_3)
 ```
 
 - Podemos hacer una selección por **posición de la columna**: 
 
 ```{r}
-select_prueba_2 <- robos_autos %>% select(3:6)
+select_prueba_4 <- df %>% select(1:5)
 
-head(select_prueba_2)
+head(select_prueba_4)
 ```
 
 - Se puede hacer una anti-selección (o sea, elegir todas las columnas menos algunas especificadas)
 ```{r}
-select_prueba_3 <- robos_autos %>% select(-c(tramite_tipo:automotor_uso_descripcion))
+ncol(df)
 
-head(select_prueba_3)
+select_prueba_5 <- df %>% select(-c(federal, radio_censal))
+
+ncol(select_prueba_5)
 ```
 
 - También, se pueden seleccionar columnas según criterios con funciones auxiliares:
@@ -115,29 +129,15 @@ head(select_prueba_3)
   + `ends_with` : selecciona columnas que terminen con el string que le pasemos. 
   + `contains` : selecciona columnas que contengan la palabra que indicamos. 
 ```{r}
-select_prueba_4 <- robos_autos %>% select(starts_with("titular"))
+select_prueba_6 <- df %>% select(ends_with("victima"))
 
-head(select_prueba_4)
-
-select_prueba_5 <- robos_autos %>% select(contains("domicilio"))
-
-head(select_prueba_5)
+head(select_prueba_6)
 ```
-### rename()
-
-- Esta función solo requiere indicar `NOMBRE_NUEVO = NOMBRE_VIEJO`
 
 ```{r}
-rename_prueba_1 <-robos_autos %>% rename(fecha = fecha_inscripcion_inicial) 
-colnames(robos_autos)
-colnames(rename_prueba_1)
-```
-- También se puede usar la versión `rename_with()` para cambiarle el nombre a una selección de columnas: 
+select_prueba_7 <- df %>% select(contains("inculpado"))
 
-```{r}
-rename_prueba_2 <- robos_autos %>% rename_with(toupper, starts_with("registro"))
-colnames(robos_autos)
-colnames(rename_prueba_2)
+head(select_prueba_7)
 ```
 
 ### filter()
@@ -145,108 +145,105 @@ colnames(rename_prueba_2)
 - Esta función tiene el siguiente esquema: `filter(CONDICIÓN)`
 - La clase 1 vimos los distintos operadores (lógicos, arimétricos, relacionales) que podemos usar para escribir estos formatos condicionales. 
 
-Supongamos que queremos quedarnos con los registros de autos cuyos titulares tienen 50% o menos de su titularidad:
-```{r}
-base_filtrada_1 <- robos_autos %>% filter(titular_porcentaje_titularidad <= 50)
-
-table(base_filtrada_1$titular_porcentaje_titularidad)
-```
-
-Por ejemplo, supongamos que queremos obtener los registros de robos realizados en Córdoba:
+Supongamos que queremos quedarnos con los registros de homicidios que se realizaron de 2019 en adelante:
 
 ```{r}
-base_filtrada_2 <- robos_autos %>% filter(registro_seccional_provincia == "Córdoba")
+base_filtrada_1 <- df %>% filter(anio >= 2019)
 
-table(base_filtrada_2$registro_seccional_provincia)
+table(df$anio)
+table(base_filtrada_1$anio)
 ```
 
-Los condicionales también pueden combinarse. Podríamos traer todos los registros de Córdoba y de Santa Fe:
+O si quisiéramos nada más los registros de homicidios sucedidos en domicilios particulares:
 
 ```{r}
-base_filtrada_3 <- robos_autos %>% filter(registro_seccional_provincia == "Córdoba" | registro_seccional_provincia == "Santa Fe")
+base_filtrada_2 <- df %>% filter(tipo_lugar == "Domicilio particular")
 
-table(base_filtrada_3$registro_seccional_provincia)
+table(df$tipo_lugar)
+table(base_filtrada_2$tipo_lugar)
 ```
 
-Ahora bien, ¿cómo hacemos si queremos los registros de Córdoba y Santa Fe pero sólo de automotores nacionales? 
+Los condicionales también pueden combinarse. Podríamos traer todos los registros sucedidos en domicilios particulares y la vía pública:
 
 ```{r}
-base_filtrada_4 <- robos_autos  %>% filter(registro_seccional_provincia %in% c("Córdoba", "Santa Fe") & automotor_origen == "Nacional")
+base_filtrada_3 <- df %>% filter(tipo_lugar == "Vía pública" | tipo_lugar == "Domicilio particular")
 
-table(base_filtrada_4$automotor_origen, base_filtrada_4$registro_seccional_provincia)
+table(df$tipo_lugar)
+table(base_filtrada_3$tipo_lugar)
 ```
 
-`%in%` es una forma de indicar que vamos a buscar los valores del vector en la columna que indicamos. Sería lo mismo que hacer: 
+También podemos combinar los operadores lógicos para hacer un filtrado por condiciones múltiples. Por ejemplo, si quisiéramos todos los registros de homicidios en domicilio particular o la vía pública realizados en Buenos Aires, podríamos hacer esto. 
 
 ```{r}
-base_filtrada_4 <- robos_autos  %>% filter((registro_seccional_provincia == "Córdoba" & automotor_origen == "Nacional") | (registro_seccional_provincia == "Santa Fe" & automotor_origen == "Nacional"))
-```
+base_filtrada_4 <- df  %>% filter(tipo_lugar %in% c("Vía pública", "Domicilio particular") & provincia == "BUENOS AIRES")
 
-Pero de manera simplificada. 
+table(base_filtrada_4$provincia, base_filtrada_4$tipo_lugar)
+```
 
 El filtrado también puede aplicarse sobre columnas para quedarnos sólo con las filas que tienen valores -es decir, borrar los NA. 
 
-Vamos a borrar los casos que tienen NA en el año de nacimiento del titular. Probemos que pasa si usamos el operador `==`
+Vamos a borrar los casos que tienen NA en la categoría `otro_en_ocasion_otro_delito`, para quedarnos únicamente con los casos de homicidios que se hicieron en relación a otro delito. Probemos que pasa si usamos el operador `!=`
 ```{r}
-base_filtrada_4 <- robos_autos  %>% filter(titular_anio_nacimiento != NA) %>% select(titular_anio_nacimiento)
-
-nrow(base_filtrada_4)
+base_filtrada_5 <- df  %>% filter(otro_en_ocasion_otro_delito != NA) 
+nrow(base_filtrada_5)
 ```
 
 ¡Nos borró todas las variables! Pero esto no está bien, ya que vimos que esta columna tenía varios valores. ¿Qué sucedió? 
 
 Resulta que los NA son bastante tramposos en R. Casi cualquier operación con uno de ellos va a devolver otro NA, y es por esto que no debemos trabajar con operadores a la hora de filtrarlos, sino que debemos usar la función `is.na()`
 ```{r}
-base_filtrada_5 <- robos_autos  %>% filter(!is.na(titular_anio_nacimiento)) %>% select(titular_anio_nacimiento)
-
+base_filtrada_5 <- df  %>% filter(!is.na(otro_en_ocasion_otro_delito))
 nrow(base_filtrada_5)
+```
+
+### rename()
+
+- Esta función solo requiere indicar `NOMBRE_NUEVO = NOMBRE_VIEJO`
+
+```{r}
+df %>% rename(otro_delito_categorias = otro_en_ocasion_otro_delito) %>% select(Id_hecho, en_ocasion_otro_delito, otro_delito_categorias)
 ```
 
 ### mutate()
 
 - Esta función nos permite crear y modificar columnas.
-- Suele ser útil crear columnas como funciones de columnas ya existentes
 - Su sintaxis es `mutate(nombre_de_la_columna = valores_de_la_columna)`  
 
 Por ejemplo, podemos crear una columna simple con el nombre de la base:
 ```{r}
-mutate_1 <- robos_autos %>% mutate(columna_ejemplo = "Registro de robos y recuperos de autos DNRPA") 
-head(mutate_1)
+df <- df %>% mutate(columna_ejemplo = "Registro de homicidios dolosos 2017-2020") 
+table(df$columna_ejemplo)
 ```
 
-Pero también podemos hacer algo más util. Por ejemplo, si echamos un vistazo a la información del domicilio y el país de nacimiento del titular, vemos que estos valores están todos en mayúscula:
+Pero también podemos hacer algo más util. Por ejemplo, si echamos un vistazo a la información de la provincia vemos que estos valores están todos en mayúscula:
 
 ```{r}
-filtrado_titular <- robos_autos %>% select(titular_domicilio_provincia, titular_domicilio_localidad, titular_pais_nacimiento)
-
-str(filtrado_titular)
+df %>% select(provincia) %>% head()
 ```
 
-Vamos a guardar los valores como nombres propios con la función `str_to_title()` del paquete `stringr` **NOTA: HACER QUE EN UN EJERCICIO PREVIO A LA CLASE DESCARGUEN EL PAQUETE**
+Vamos a guardar los valores como nombres propios con la función `str_to_title()` del paquete `stringr`.
 
 ```{r}
-mutate_2 <- robos_autos %>% mutate(
-        titular_domicilio_provincia = str_to_title(titular_domicilio_provincia),
-        titular_domicilio_localidad = str_to_title(titular_domicilio_localidad),
-        titular_pais_nacimiento = str_to_title(titular_pais_nacimiento)
-)%>%select(titular_domicilio_provincia, titular_domicilio_localidad, titular_pais_nacimiento)
-
-head(mutate_2)
+df %>% mutate(provincia = str_to_title(provincia))%>%
+        select(provincia) %>%
+        head()
 ```
 
-- Es una función muy útil a la hora de recodificar variables, sobre todo cuando la usamos con la función `case_when()`. 
-
-Supongamos que queremos hacer una variable codificada del género del titular. Queremos que 1 sea "Masculino", 2 "Femenino" y 999 en los casos que no se contestó o no corresponde.
-
+- Es una función muy útil a la hora de recodificar variables, sobre todo cuando la usamos con la función `case_when()`. Supongamos que queremos agrupar los tipos de relaciones de víctima con el inculpado en siete grupos: familiar, laboral, de pareja, sin relación, otros, sin datos y no corresponde. 
 ```{r}
-mutate_3 <- robos_autos %>% mutate(
-        genero_codif = case_when(
-                titular_genero == "Masculino" ~ 1,
-                titular_genero == "Femenino" ~ 2, 
-                titular_genero %in% c("No identificado", "No aplica") ~ 999
+df <- df %>% mutate(
+        relacion_agrup = case_when(
+                relacion_victima_inculpado %in% c("Hermano/a", "Hijo/a", "Otros vínculos familiares", "Padre/Madre") ~ "Familiar",
+                relacion_victima_inculpado %in% c("Cliente / proveedor", "Empleado", "Empleador", "Socio (Relación comercial)") ~ "Laboral", 
+                relacion_victima_inculpado %in% c("Conyuge/ pareja", "Ex conyuge / ex pareja") ~ "De pareja",
+                relacion_victima_inculpado %in% c("Sin relación") ~ "Sin relación",
+                relacion_victima_inculpado %in% c("Otras relaciones no familiares") ~ "Otros",
+                relacion_victima_inculpado == "Sin determinación" ~ "Sin datos",
+                relacion_victima_inculpado == "No corresponde" ~ "No corresponde"
         )
 )
 
-table(mutate_3$titular_genero, mutate_3$genero_codif)
+table(df$relacion_agrup)
+
 ```
 

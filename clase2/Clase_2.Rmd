@@ -56,7 +56,7 @@ getwd()
 ¿De qué nos sirve esto? Si yo quiero, por ejemplo, importar una base de datos que tengo descargada en la computadora, lo hago con la función `read.csv()`, a la cual hay que pasarle la ruta donde está guardado el archivo que deseo. Por ejemplo, si quisiera leer la base de Estadísticas criminales en la República Argentina que tengo guardada en la carpeta del curso, debería hacerlo así:
 
 ```{r}
-df <- read.csv("~/Escritorio/Cursos/min_seguridad_curso/data/snic-pais-series.csv")
+df <- read.csv("~/Escritorio/Cursos/min_seguridad_curso/clase2/data/snic-pais-series.csv")
 ```
 
 Ahora bien, ¿qué problemas tiene esto? 
@@ -91,12 +91,11 @@ Esto hace lo siguiente:
 - Carga el proyecto en RStudio y muestra su nombre en la barra de opciones de R Studio.
 
 Cada vez que abramos un proyecto de R, van a ver que en el panel de salida de la pantalla, en la pestaña que dice *Files* se encuentra un directorio con todos los elementos que hay en esa carpeta. 
-![Panel de salida - Proyectos](../imgs/panel_salida_proyectos.PNG)
+![Panel de salida - Proyectos](./imgs/panel_salida_proyectos.PNG)
 
 Ahora podemos abrir los archivos de manera más simple y compartir los proyectos de R de manera que puedan reproducirse en otras computadoras. Por ejemplo, para leer el archivo que queríamos antes, puedo escribir simplemente: 
-```{r}
+```{r, eval=FALSE}
 df <- read.csv("./data/Base_PUFEAF.csv")
-head(df)
 ```
 Si por algún motivo queremos navegar por una carpeta superior a la que nos encontramos (siguiendo nuestro ejemplo, si quisiésemos buscar algo en la carpeta 'cursos'), podemos ubicarnos con `../`. Este símbolo lo que hace es ir hacia atrás en las carpetas.
 
@@ -178,11 +177,11 @@ Además, existe un paquete del mundo `tidyverse` (que veremos en profundidad la 
   
 Una vez tenemos la base de datos cargada en el entorno, podemos ver sus características de manera rápida en la esquina superior derecha de la pantalla.
 
-![Vista rápida de atributos del dataframe](../imgs/salida_df.PNG)
+![Vista rápida de atributos del dataframe](./imgs/salida_df.PNG)
 
 Haciendo clic en ese archivo, también podemos ver el dataframe. 
 
-![Vista del dataframe](../imgs/vista_df.PNG)
+![Vista del dataframe](./imgs/vista_df.PNG)
 
 ### Exportación de archivos 
 

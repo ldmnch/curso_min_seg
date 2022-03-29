@@ -21,9 +21,5 @@
 ### 9. Guardar como .csv la última base generada. 
 
 ### 10. Dado el siguiente código, agregar a la base una columna que contenga el peso relativo de los casos de cada provincia respecto al total:
-Base_PUFEAF %>% 
-        group_by(Provincia) %>% 
-        summarise(n = n())
-
 
 ### 11. Instalar un paquete que vamos a usar la próxima clase: lubridate. 

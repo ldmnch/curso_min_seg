@@ -242,7 +242,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Clase 3</h1>
 <h4 class="author">Domenech Burin, Laia</h4>
-<h4 class="date">14 febrero, 2022</h4>
+<h4 class="date">29 marzo, 2022</h4>
 
 </div>
 
@@ -283,28 +283,68 @@ div.tocify {
 <div id="pipes-la-gramática-básica-de-tidyverse" class="section level2">
 <h2>Pipes: la gramática básica de tidyverse</h2>
 <p>Más arriba mencionamos que el paquete <code>magrittr</code> introduce la pipe y la señalamos como este símbolo <code>%&gt;%</code>. La pipe es una <strong>forma de escribir</strong> del mundo tidyverse, que indica que vamos a realizar de terminada operación sobre el objeto que está a la izquierda. Sirve para indicar una secuencia de acciones.</p>
-<p>Por ejemplo, tomemos la base de datos del SNIC a nivel provincial. Supongamos que queremos obtener la media de cantidad de hechos de todos los tipos de delito en todas las provincias.### ESTO NOCAMBIAR!!! Sin el pipe, lo haríamos así:</p>
-<pre class="r"><code>robos_autos &lt;- read.table(&quot;../data/dnrpa-robos-recuperos-autos-202109.csv&quot;, sep = &quot;,&quot;,
-    header = TRUE, encoding = &quot;UTF-8&quot;, stringsAsFactors = F)
+<p>Por ejemplo, tomemos la base de datos de homicidios dolosos entre 2017 y 2020. Para sacar la tabla de frecuencias de casos por provincia haríamos lo siguiente:</p>
+<pre class="r"><code>df &lt;- readxl::read_excel(&quot;./data/Integrado_HD_base_usuaria_2017-2020.xlsx&quot;)
 
-table(robos_autos$titular_genero)</code></pre>
+table(df$provincia)</code></pre>
 <pre><code>## 
-##        Femenino       Masculino       No aplica No identificado 
-##             805            1607             136             579</code></pre>
+##           BUENOS AIRES              CATAMARCA                  CHACO 
+##                   8120                     95                    784 
+##                 CHUBUT CIUDAD DE BUENOS AIRES                CORDOBA 
+##                    388                   1071                    966 
+##             CORRIENTES             ENTRE RIOS                FORMOSA 
+##                    333                    513                    287 
+##                  JUJUY               LA PAMPA               LA RIOJA 
+##                    242                     60                     77 
+##                MENDOZA               MISIONES                NEUQUEN 
+##                    902                    522                    292 
+##              RIO NEGRO                  SALTA               SAN JUAN 
+##                    242                    769                    172 
+##               SAN LUIS             SANTA CRUZ               SANTA FE 
+##                    104                    137                   2828 
+##    SANTIAGO DEL ESTERO       TIERRA DEL FUEGO                TUCUMÁN 
+##                    362                     25                   1226</code></pre>
 <p>Ahora, con una pipe…</p>
-<pre class="r"><code>robos_autos$titular_genero %&gt;%
+<pre class="r"><code>df$provincia %&gt;%
     table()</code></pre>
 <pre><code>## .
-##        Femenino       Masculino       No aplica No identificado 
-##             805            1607             136             579</code></pre>
+##           BUENOS AIRES              CATAMARCA                  CHACO 
+##                   8120                     95                    784 
+##                 CHUBUT CIUDAD DE BUENOS AIRES                CORDOBA 
+##                    388                   1071                    966 
+##             CORRIENTES             ENTRE RIOS                FORMOSA 
+##                    333                    513                    287 
+##                  JUJUY               LA PAMPA               LA RIOJA 
+##                    242                     60                     77 
+##                MENDOZA               MISIONES                NEUQUEN 
+##                    902                    522                    292 
+##              RIO NEGRO                  SALTA               SAN JUAN 
+##                    242                    769                    172 
+##               SAN LUIS             SANTA CRUZ               SANTA FE 
+##                    104                    137                   2828 
+##    SANTIAGO DEL ESTERO       TIERRA DEL FUEGO                TUCUMÁN 
+##                    362                     25                   1226</code></pre>
 <p>Las funciones pueden concatenarse, y esta es la principal gracia del uso de las pipes.</p>
-<pre class="r"><code>robos_autos$titular_genero %&gt;%
+<pre class="r"><code>df$provincia %&gt;%
     table() %&gt;%
-    prop.table() %&gt;%
-    round(., 2)</code></pre>
+    prop.table() * 100</code></pre>
 <pre><code>## .
-##        Femenino       Masculino       No aplica No identificado 
-##            0.26            0.51            0.04            0.19</code></pre>
+##           BUENOS AIRES              CATAMARCA                  CHACO 
+##             39.5769362              0.4630307              3.8212214 
+##                 CHUBUT CIUDAD DE BUENOS AIRES                CORDOBA 
+##              1.8911147              5.2200614              4.7082907 
+##             CORRIENTES             ENTRE RIOS                FORMOSA 
+##              1.6230443              2.5003656              1.3988400 
+##                  JUJUY               LA PAMPA               LA RIOJA 
+##              1.1795097              0.2924404              0.3752985 
+##                MENDOZA               MISIONES                NEUQUEN 
+##              4.3963542              2.5442316              1.4232100 
+##              RIO NEGRO                  SALTA               SAN JUAN 
+##              1.1795097              3.7481113              0.8383292 
+##               SAN LUIS             SANTA CRUZ               SANTA FE 
+##              0.5068967              0.6677389             13.7836916 
+##    SANTIAGO DEL ESTERO       TIERRA DEL FUEGO                TUCUMÁN 
+##              1.7643905              0.1218502              5.9755325</code></pre>
 </div>
 <div id="dplyr" class="section level2">
 <h2>dplyr</h2>
@@ -320,82 +360,82 @@ table(robos_autos$titular_genero)</code></pre>
 <div id="select" class="section level3">
 <h3>select()</h3>
 <ul>
-<li>Esta función únicamente requiere poner el nombre de las columnas que elegimos. +Para seleccionar un intervalo de columnas, uso el <code>:</code></li>
+<li>Esta función únicamente requiere poner el nombre de las columnas que elegimos. Podemos elegir según nombre o posición.</li>
+<li>La forma básica de esta función es <code>select(nombre_de_la_columna)</code>.</li>
 </ul>
-<pre class="r"><code>select_prueba_1 &lt;- robos_autos %&gt;%
-    select(tramite_fecha, fecha_inscripcion_inicial, registro_seccional_codigo:registro_seccional_provincia)
-
+<pre class="r"><code>select_prueba_1 &lt;- df %&gt;%
+    select(provincia)
 head(select_prueba_1)</code></pre>
-<pre><code>##   tramite_fecha fecha_inscripcion_inicial registro_seccional_codigo
-## 1    2021-09-22                2007-06-28                      4053
-## 2    2021-09-23                2000-08-02                      4075
-## 3    2021-09-08                1988-10-13                      4077
-## 4    2021-09-06                1998-11-27                      4082
-## 5    2021-09-10                1998-03-18                      4082
-## 6    2021-09-13                2010-07-29                      5015
-##   registro_seccional_descripcion registro_seccional_provincia
-## 1                  CORDOBA Nº 13                      Córdoba
-## 2                  CORDOBA Nº 22                      Córdoba
-## 3                  CORDOBA Nº 23                      Córdoba
-## 4             VILLA ALLENDE Nº 2                      Córdoba
-## 5             VILLA ALLENDE Nº 2                      Córdoba
-## 6                      SAN COSME                   Corrientes</code></pre>
+<pre><code>## # A tibble: 6 × 1
+##   provincia
+##   &lt;chr&gt;    
+## 1 NEUQUEN  
+## 2 NEUQUEN  
+## 3 NEUQUEN  
+## 4 NEUQUEN  
+## 5 NEUQUEN  
+## 6 NEUQUEN</code></pre>
+<ul>
+<li>Puedo seleccionar más de una columna con la coma:</li>
+</ul>
+<pre class="r"><code>select_prueba_2 &lt;- df %&gt;%
+    select(provincia, departamento, anio)
+
+head(select_prueba_2)</code></pre>
+<pre><code>## # A tibble: 6 × 3
+##   provincia departamento  anio
+##   &lt;chr&gt;     &lt;chr&gt;        &lt;dbl&gt;
+## 1 NEUQUEN   Confluencia   2017
+## 2 NEUQUEN   Confluencia   2017
+## 3 NEUQUEN   Confluencia   2017
+## 4 NEUQUEN   Confluencia   2017
+## 5 NEUQUEN   Confluencia   2017
+## 6 NEUQUEN   Confluencia   2017</code></pre>
+<ul>
+<li>También se puede seleccionar un intervalo de columnas, usando el <code>:</code></li>
+</ul>
+<pre class="r"><code>select_prueba_3 &lt;- df %&gt;%
+    select(anio, departamento, provincia, tipo_lugar:otro_motivo_origen_registro)
+
+head(select_prueba_3)</code></pre>
+<pre><code>## # A tibble: 6 × 11
+##    anio departamento provincia tipo_lugar           otro_tipo_lugar clase_arma  
+##   &lt;dbl&gt; &lt;chr&gt;        &lt;chr&gt;     &lt;chr&gt;                &lt;chr&gt;           &lt;chr&gt;       
+## 1  2017 Confluencia  NEUQUEN   Domicilio particular &lt;NA&gt;            Arma de fue…
+## 2  2017 Confluencia  NEUQUEN   Domicilio particular &lt;NA&gt;            Arma de fue…
+## 3  2017 Confluencia  NEUQUEN   Domicilio particular &lt;NA&gt;            Arma de fue…
+## 4  2017 Confluencia  NEUQUEN   Domicilio particular &lt;NA&gt;            Arma de fue…
+## 5  2017 Confluencia  NEUQUEN   Vía pública          &lt;NA&gt;            Arma de fue…
+## 6  2017 Confluencia  NEUQUEN   Vía pública          &lt;NA&gt;            Arma de fue…
+## # … with 5 more variables: otro_clase_arma &lt;chr&gt;, en_ocasion_otro_delito &lt;chr&gt;,
+## #   otro_en_ocasion_otro_delito &lt;chr&gt;, motivo_origen_registro &lt;chr&gt;,
+## #   otro_motivo_origen_registro &lt;chr&gt;</code></pre>
 <ul>
 <li>Podemos hacer una selección por <strong>posición de la columna</strong>:</li>
 </ul>
-<pre class="r"><code>select_prueba_2 &lt;- robos_autos %&gt;%
-    select(3:6)
+<pre class="r"><code>select_prueba_4 &lt;- df %&gt;%
+    select(1:5)
 
-head(select_prueba_2)</code></pre>
-<pre><code>##   fecha_inscripcion_inicial registro_seccional_codigo
-## 1                2007-06-28                      4053
-## 2                2000-08-02                      4075
-## 3                1988-10-13                      4077
-## 4                1998-11-27                      4082
-## 5                1998-03-18                      4082
-## 6                2010-07-29                      5015
-##   registro_seccional_descripcion registro_seccional_provincia
-## 1                  CORDOBA Nº 13                      Córdoba
-## 2                  CORDOBA Nº 22                      Córdoba
-## 3                  CORDOBA Nº 23                      Córdoba
-## 4             VILLA ALLENDE Nº 2                      Córdoba
-## 5             VILLA ALLENDE Nº 2                      Córdoba
-## 6                      SAN COSME                   Corrientes</code></pre>
+head(select_prueba_4)</code></pre>
+<pre><code>## # A tibble: 6 × 5
+##   Id_hecho federal Cod_INDEC_Prov provincia codigo_departamento
+##      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;chr&gt;     &lt;chr&gt;              
+## 1    11535 No      58             NEUQUEN   35                 
+## 2    11535 No      58             NEUQUEN   35                 
+## 3    11535 No      58             NEUQUEN   35                 
+## 4    11535 No      58             NEUQUEN   35                 
+## 5    11536 No      58             NEUQUEN   35                 
+## 6    11536 No      58             NEUQUEN   35</code></pre>
 <ul>
 <li>Se puede hacer una anti-selección (o sea, elegir todas las columnas menos algunas especificadas)</li>
 </ul>
-<pre class="r"><code>select_prueba_3 &lt;- robos_autos %&gt;%
-    select(-c(tramite_tipo:automotor_uso_descripcion))
+<pre class="r"><code>ncol(df)</code></pre>
+<pre><code>## [1] 42</code></pre>
+<pre class="r"><code>select_prueba_5 &lt;- df %&gt;%
+    select(-c(federal, radio_censal))
 
-head(select_prueba_3)</code></pre>
-<pre><code>##   titular_tipo_persona titular_domicilio_localidad titular_domicilio_provincia
-## 1               Física                     CORDOBA                     CORDOBA
-## 2               Física                     CORDOBA                     CORDOBA
-## 3               Física                     CORDOBA                     CORDOBA
-## 4               Física                  MENDIOLAZA                     CORDOBA
-## 5               Física                      SALDAN                     CORDOBA
-## 6             Jurídica                   SAN COSME                  CORRIENTES
-##    titular_genero titular_anio_nacimiento titular_pais_nacimiento
-## 1 No identificado                    1965               ARGENTINA
-## 2       Masculino                    2000               ARGENTINA
-## 3        Femenino                    1993               ARGENTINA
-## 4       Masculino                    1981               ARGENTINA
-## 5       Masculino                    1974               ARGENTINA
-## 6       No aplica                    1996               No aplica
-##   titular_porcentaje_titularidad titular_domicilio_provincia_id
-## 1                            100                             14
-## 2                            100                             14
-## 3                            100                             14
-## 4                            100                             14
-## 5                            100                             14
-## 6                            100                             18
-##   titular_pais_nacimiento_id
-## 1                        ARG
-## 2                        ARG
-## 3                        ARG
-## 4                        ARG
-## 5                        ARG
-## 6</code></pre>
+ncol(select_prueba_5)</code></pre>
+<pre><code>## [1] 40</code></pre>
 <ul>
 <li>También, se pueden seleccionar columnas según criterios con funciones auxiliares:
 <ul>
@@ -404,125 +444,37 @@ head(select_prueba_3)</code></pre>
 <li><code>contains</code> : selecciona columnas que contengan la palabra que indicamos.</li>
 </ul></li>
 </ul>
-<pre class="r"><code>select_prueba_4 &lt;- robos_autos %&gt;%
-    select(starts_with(&quot;titular&quot;))
+<pre class="r"><code>select_prueba_6 &lt;- df %&gt;%
+    select(ends_with(&quot;victima&quot;))
 
-head(select_prueba_4)</code></pre>
-<pre><code>##   titular_tipo_persona titular_domicilio_localidad titular_domicilio_provincia
-## 1               Física                     CORDOBA                     CORDOBA
-## 2               Física                     CORDOBA                     CORDOBA
-## 3               Física                     CORDOBA                     CORDOBA
-## 4               Física                  MENDIOLAZA                     CORDOBA
-## 5               Física                      SALDAN                     CORDOBA
-## 6             Jurídica                   SAN COSME                  CORRIENTES
-##    titular_genero titular_anio_nacimiento titular_pais_nacimiento
-## 1 No identificado                    1965               ARGENTINA
-## 2       Masculino                    2000               ARGENTINA
-## 3        Femenino                    1993               ARGENTINA
-## 4       Masculino                    1981               ARGENTINA
-## 5       Masculino                    1974               ARGENTINA
-## 6       No aplica                    1996               No aplica
-##   titular_porcentaje_titularidad titular_domicilio_provincia_id
-## 1                            100                             14
-## 2                            100                             14
-## 3                            100                             14
-## 4                            100                             14
-## 5                            100                             14
-## 6                            100                             18
-##   titular_pais_nacimiento_id
-## 1                        ARG
-## 2                        ARG
-## 3                        ARG
-## 4                        ARG
-## 5                        ARG
-## 6</code></pre>
-<pre class="r"><code>select_prueba_5 &lt;- robos_autos %&gt;%
-    select(contains(&quot;domicilio&quot;))
+head(select_prueba_6)</code></pre>
+<pre><code>## # A tibble: 6 × 9
+##   sexo_victima   identidad_gener… tr_edad_victima clase_victima otro_clase_vict…
+##   &lt;chr&gt;          &lt;chr&gt;            &lt;chr&gt;           &lt;chr&gt;         &lt;chr&gt;           
+## 1 No corresponde No corresponde   No corresponde  No correspon… -------         
+## 2 No corresponde No corresponde   No corresponde  No correspon… -------         
+## 3 No corresponde No corresponde   No corresponde  No correspon… -------         
+## 4 Masculino      Varón            45-49           Civil         &lt;NA&gt;            
+## 5 No corresponde No corresponde   No corresponde  No correspon… -------         
+## 6 No corresponde No corresponde   No corresponde  No correspon… -------         
+## # … with 4 more variables: situacion_ocupacional_victima &lt;chr&gt;,
+## #   otro_identidad_genero_victima &lt;chr&gt;, relacion_inculpado_victima &lt;chr&gt;,
+## #   tipo_hecho_segun_victima &lt;chr&gt;</code></pre>
+<pre class="r"><code>select_prueba_7 &lt;- df %&gt;%
+    select(contains(&quot;inculpado&quot;))
 
-head(select_prueba_5)</code></pre>
-<pre><code>##   titular_domicilio_localidad titular_domicilio_provincia
-## 1                     CORDOBA                     CORDOBA
-## 2                     CORDOBA                     CORDOBA
-## 3                     CORDOBA                     CORDOBA
-## 4                  MENDIOLAZA                     CORDOBA
-## 5                      SALDAN                     CORDOBA
-## 6                   SAN COSME                  CORRIENTES
-##   titular_domicilio_provincia_id
-## 1                             14
-## 2                             14
-## 3                             14
-## 4                             14
-## 5                             14
-## 6                             18</code></pre>
-</div>
-<div id="rename" class="section level3">
-<h3>rename()</h3>
-<ul>
-<li>Esta función solo requiere indicar <code>NOMBRE_NUEVO = NOMBRE_VIEJO</code></li>
-</ul>
-<pre class="r"><code>rename_prueba_1 &lt;- robos_autos %&gt;%
-    rename(fecha = fecha_inscripcion_inicial)
-colnames(robos_autos)</code></pre>
-<pre><code>##  [1] &quot;tramite_tipo&quot;                   &quot;tramite_fecha&quot;                 
-##  [3] &quot;fecha_inscripcion_inicial&quot;      &quot;registro_seccional_codigo&quot;     
-##  [5] &quot;registro_seccional_descripcion&quot; &quot;registro_seccional_provincia&quot;  
-##  [7] &quot;automotor_origen&quot;               &quot;automotor_anio_modelo&quot;         
-##  [9] &quot;automotor_tipo_codigo&quot;          &quot;automotor_tipo_descripcion&quot;    
-## [11] &quot;automotor_marca_codigo&quot;         &quot;automotor_marca_descripcion&quot;   
-## [13] &quot;automotor_modelo_codigo&quot;        &quot;automotor_modelo_descripcion&quot;  
-## [15] &quot;automotor_uso_codigo&quot;           &quot;automotor_uso_descripcion&quot;     
-## [17] &quot;titular_tipo_persona&quot;           &quot;titular_domicilio_localidad&quot;   
-## [19] &quot;titular_domicilio_provincia&quot;    &quot;titular_genero&quot;                
-## [21] &quot;titular_anio_nacimiento&quot;        &quot;titular_pais_nacimiento&quot;       
-## [23] &quot;titular_porcentaje_titularidad&quot; &quot;titular_domicilio_provincia_id&quot;
-## [25] &quot;titular_pais_nacimiento_id&quot;</code></pre>
-<pre class="r"><code>colnames(rename_prueba_1)</code></pre>
-<pre><code>##  [1] &quot;tramite_tipo&quot;                   &quot;tramite_fecha&quot;                 
-##  [3] &quot;fecha&quot;                          &quot;registro_seccional_codigo&quot;     
-##  [5] &quot;registro_seccional_descripcion&quot; &quot;registro_seccional_provincia&quot;  
-##  [7] &quot;automotor_origen&quot;               &quot;automotor_anio_modelo&quot;         
-##  [9] &quot;automotor_tipo_codigo&quot;          &quot;automotor_tipo_descripcion&quot;    
-## [11] &quot;automotor_marca_codigo&quot;         &quot;automotor_marca_descripcion&quot;   
-## [13] &quot;automotor_modelo_codigo&quot;        &quot;automotor_modelo_descripcion&quot;  
-## [15] &quot;automotor_uso_codigo&quot;           &quot;automotor_uso_descripcion&quot;     
-## [17] &quot;titular_tipo_persona&quot;           &quot;titular_domicilio_localidad&quot;   
-## [19] &quot;titular_domicilio_provincia&quot;    &quot;titular_genero&quot;                
-## [21] &quot;titular_anio_nacimiento&quot;        &quot;titular_pais_nacimiento&quot;       
-## [23] &quot;titular_porcentaje_titularidad&quot; &quot;titular_domicilio_provincia_id&quot;
-## [25] &quot;titular_pais_nacimiento_id&quot;</code></pre>
-<ul>
-<li>También se puede usar la versión <code>rename_with()</code> para cambiarle el nombre a una selección de columnas:</li>
-</ul>
-<pre class="r"><code>rename_prueba_2 &lt;- robos_autos %&gt;%
-    rename_with(toupper, starts_with(&quot;registro&quot;))
-colnames(robos_autos)</code></pre>
-<pre><code>##  [1] &quot;tramite_tipo&quot;                   &quot;tramite_fecha&quot;                 
-##  [3] &quot;fecha_inscripcion_inicial&quot;      &quot;registro_seccional_codigo&quot;     
-##  [5] &quot;registro_seccional_descripcion&quot; &quot;registro_seccional_provincia&quot;  
-##  [7] &quot;automotor_origen&quot;               &quot;automotor_anio_modelo&quot;         
-##  [9] &quot;automotor_tipo_codigo&quot;          &quot;automotor_tipo_descripcion&quot;    
-## [11] &quot;automotor_marca_codigo&quot;         &quot;automotor_marca_descripcion&quot;   
-## [13] &quot;automotor_modelo_codigo&quot;        &quot;automotor_modelo_descripcion&quot;  
-## [15] &quot;automotor_uso_codigo&quot;           &quot;automotor_uso_descripcion&quot;     
-## [17] &quot;titular_tipo_persona&quot;           &quot;titular_domicilio_localidad&quot;   
-## [19] &quot;titular_domicilio_provincia&quot;    &quot;titular_genero&quot;                
-## [21] &quot;titular_anio_nacimiento&quot;        &quot;titular_pais_nacimiento&quot;       
-## [23] &quot;titular_porcentaje_titularidad&quot; &quot;titular_domicilio_provincia_id&quot;
-## [25] &quot;titular_pais_nacimiento_id&quot;</code></pre>
-<pre class="r"><code>colnames(rename_prueba_2)</code></pre>
-<pre><code>##  [1] &quot;tramite_tipo&quot;                   &quot;tramite_fecha&quot;                 
-##  [3] &quot;fecha_inscripcion_inicial&quot;      &quot;REGISTRO_SECCIONAL_CODIGO&quot;     
-##  [5] &quot;REGISTRO_SECCIONAL_DESCRIPCION&quot; &quot;REGISTRO_SECCIONAL_PROVINCIA&quot;  
-##  [7] &quot;automotor_origen&quot;               &quot;automotor_anio_modelo&quot;         
-##  [9] &quot;automotor_tipo_codigo&quot;          &quot;automotor_tipo_descripcion&quot;    
-## [11] &quot;automotor_marca_codigo&quot;         &quot;automotor_marca_descripcion&quot;   
-## [13] &quot;automotor_modelo_codigo&quot;        &quot;automotor_modelo_descripcion&quot;  
-## [15] &quot;automotor_uso_codigo&quot;           &quot;automotor_uso_descripcion&quot;     
-## [17] &quot;titular_tipo_persona&quot;           &quot;titular_domicilio_localidad&quot;   
-## [19] &quot;titular_domicilio_provincia&quot;    &quot;titular_genero&quot;                
-## [21] &quot;titular_anio_nacimiento&quot;        &quot;titular_pais_nacimiento&quot;       
-## [23] &quot;titular_porcentaje_titularidad&quot; &quot;titular_domicilio_provincia_id&quot;
-## [25] &quot;titular_pais_nacimiento_id&quot;</code></pre>
+head(select_prueba_7)</code></pre>
+<pre><code>## # A tibble: 6 × 8
+##   sexo_inculpado identidad_genero_inculpado otro_identidad_gen… tr_edad_inculpa…
+##   &lt;chr&gt;          &lt;chr&gt;                      &lt;chr&gt;               &lt;chr&gt;           
+## 1 Masculino      Varón                      &lt;NA&gt;                Sin determinar  
+## 2 Masculino      Varón                      &lt;NA&gt;                Sin determinar  
+## 3 Masculino      Varón                      &lt;NA&gt;                Sin determinar  
+## 4 No corresponde No corresponde             -------             No corresponde  
+## 5 Masculino      Varón                      &lt;NA&gt;                30-34           
+## 6 Masculino      Varón                      &lt;NA&gt;                20-24           
+## # … with 4 more variables: clase_inculpado &lt;chr&gt;, otro_clase_inculpado &lt;chr&gt;,
+## #   relacion_inculpado_victima &lt;chr&gt;, relacion_victima_inculpado &lt;chr&gt;</code></pre>
 </div>
 <div id="filter" class="section level3">
 <h3>filter()</h3>
@@ -530,192 +482,154 @@ colnames(robos_autos)</code></pre>
 <li>Esta función tiene el siguiente esquema: <code>filter(CONDICIÓN)</code></li>
 <li>La clase 1 vimos los distintos operadores (lógicos, arimétricos, relacionales) que podemos usar para escribir estos formatos condicionales.</li>
 </ul>
-<p>Supongamos que queremos quedarnos con los registros de autos cuyos titulares tienen 50% o menos de su titularidad:</p>
-<pre class="r"><code>base_filtrada_1 &lt;- robos_autos %&gt;%
-    filter(titular_porcentaje_titularidad &lt;= 50)
+<p>Supongamos que queremos quedarnos con los registros de homicidios que se realizaron de 2019 en adelante:</p>
+<pre class="r"><code>base_filtrada_1 &lt;- df %&gt;%
+    filter(anio &gt;= 2019)
 
-table(base_filtrada_1$titular_porcentaje_titularidad)</code></pre>
+table(df$anio)</code></pre>
 <pre><code>## 
-##  25  50 
-##   1 140</code></pre>
-<p>Por ejemplo, supongamos que queremos obtener los registros de robos realizados en Córdoba:</p>
-<pre class="r"><code>base_filtrada_2 &lt;- robos_autos %&gt;%
-    filter(registro_seccional_provincia == &quot;Córdoba&quot;)
-
-table(base_filtrada_2$registro_seccional_provincia)</code></pre>
+## 2017 2018 2019 2020 
+## 4880 5037 5101 5499</code></pre>
+<pre class="r"><code>table(base_filtrada_1$anio)</code></pre>
 <pre><code>## 
-## Córdoba 
-##     257</code></pre>
-<p>Los condicionales también pueden combinarse. Podríamos traer todos los registros de Córdoba y de Santa Fe:</p>
-<pre class="r"><code>base_filtrada_3 &lt;- robos_autos %&gt;%
-    filter(registro_seccional_provincia == &quot;Córdoba&quot; | registro_seccional_provincia ==
-        &quot;Santa Fe&quot;)
+## 2019 2020 
+## 5101 5499</code></pre>
+<p>O si quisiéramos nada más los registros de homicidios sucedidos en domicilios particulares:</p>
+<pre class="r"><code>base_filtrada_2 &lt;- df %&gt;%
+    filter(tipo_lugar == &quot;Domicilio particular&quot;)
 
-table(base_filtrada_3$registro_seccional_provincia)</code></pre>
+table(df$tipo_lugar)</code></pre>
 <pre><code>## 
-##  Córdoba Santa Fe 
-##      257      130</code></pre>
-<p>Ahora bien, ¿cómo hacemos si queremos los registros de Córdoba y Santa Fe pero sólo de automotores nacionales?</p>
-<pre class="r"><code>base_filtrada_4 &lt;- robos_autos %&gt;%
-    filter(registro_seccional_provincia %in% c(&quot;Córdoba&quot;, &quot;Santa Fe&quot;) &amp; automotor_origen ==
-        &quot;Nacional&quot;)
+##   Carcel o comisaría             Comercio Domicilio particular 
+##                  205                  591                 5864 
+##  Interior de rodados           Otro lugar       Sin determinar 
+##                  246                  580                 2740 
+##          Vía pública 
+##                10291</code></pre>
+<pre class="r"><code>table(base_filtrada_2$tipo_lugar)</code></pre>
+<pre><code>## 
+## Domicilio particular 
+##                 5864</code></pre>
+<p>Los condicionales también pueden combinarse. Podríamos traer todos los registros sucedidos en domicilios particulares y la vía pública:</p>
+<pre class="r"><code>base_filtrada_3 &lt;- df %&gt;%
+    filter(tipo_lugar == &quot;Vía pública&quot; | tipo_lugar == &quot;Domicilio particular&quot;)
 
-table(base_filtrada_4$automotor_origen, base_filtrada_4$registro_seccional_provincia)</code></pre>
-<pre><code>##           
-##            Córdoba Santa Fe
-##   Nacional     118       70</code></pre>
-<p><code>%in%</code> es una forma de indicar que vamos a buscar los valores del vector en la columna que indicamos. Sería lo mismo que hacer:</p>
-<pre class="r"><code>base_filtrada_4 &lt;- robos_autos %&gt;%
-    filter((registro_seccional_provincia == &quot;Córdoba&quot; &amp; automotor_origen == &quot;Nacional&quot;) |
-        (registro_seccional_provincia == &quot;Santa Fe&quot; &amp; automotor_origen == &quot;Nacional&quot;))</code></pre>
-<p>Pero de manera simplificada.</p>
+table(df$tipo_lugar)</code></pre>
+<pre><code>## 
+##   Carcel o comisaría             Comercio Domicilio particular 
+##                  205                  591                 5864 
+##  Interior de rodados           Otro lugar       Sin determinar 
+##                  246                  580                 2740 
+##          Vía pública 
+##                10291</code></pre>
+<pre class="r"><code>table(base_filtrada_3$tipo_lugar)</code></pre>
+<pre><code>## 
+## Domicilio particular          Vía pública 
+##                 5864                10291</code></pre>
+<p>También podemos combinar los operadores lógicos para hacer un filtrado por condiciones múltiples. Por ejemplo, si quisiéramos todos los registros de homicidios en domicilio particular o la vía pública realizados en Buenos Aires, podríamos hacer esto.</p>
+<pre class="r"><code>base_filtrada_4 &lt;- df %&gt;%
+    filter(tipo_lugar %in% c(&quot;Vía pública&quot;, &quot;Domicilio particular&quot;) &amp; provincia ==
+        &quot;BUENOS AIRES&quot;)
+
+table(base_filtrada_4$provincia, base_filtrada_4$tipo_lugar)</code></pre>
+<pre><code>##               
+##                Domicilio particular Vía pública
+##   BUENOS AIRES                 1791        3105</code></pre>
 <p>El filtrado también puede aplicarse sobre columnas para quedarnos sólo con las filas que tienen valores -es decir, borrar los NA.</p>
-<p>Vamos a borrar los casos que tienen NA en el año de nacimiento del titular. Probemos que pasa si usamos el operador <code>==</code></p>
-<pre class="r"><code>base_filtrada_4 &lt;- robos_autos %&gt;%
-    filter(titular_anio_nacimiento != NA) %&gt;%
-    select(titular_anio_nacimiento)
-
-nrow(base_filtrada_4)</code></pre>
+<p>Vamos a borrar los casos que tienen NA en la categoría <code>otro_en_ocasion_otro_delito</code>, para quedarnos únicamente con los casos de homicidios que se hicieron en relación a otro delito. Probemos que pasa si usamos el operador <code>!=</code></p>
+<pre class="r"><code>base_filtrada_5 &lt;- df %&gt;%
+    filter(otro_en_ocasion_otro_delito != NA)
+nrow(base_filtrada_5)</code></pre>
 <pre><code>## [1] 0</code></pre>
 <p>¡Nos borró todas las variables! Pero esto no está bien, ya que vimos que esta columna tenía varios valores. ¿Qué sucedió?</p>
 <p>Resulta que los NA son bastante tramposos en R. Casi cualquier operación con uno de ellos va a devolver otro NA, y es por esto que no debemos trabajar con operadores a la hora de filtrarlos, sino que debemos usar la función <code>is.na()</code></p>
-<pre class="r"><code>base_filtrada_5 &lt;- robos_autos %&gt;%
-    filter(!is.na(titular_anio_nacimiento)) %&gt;%
-    select(titular_anio_nacimiento)
-
+<pre class="r"><code>base_filtrada_5 &lt;- df %&gt;%
+    filter(!is.na(otro_en_ocasion_otro_delito))
 nrow(base_filtrada_5)</code></pre>
-<pre><code>## [1] 3126</code></pre>
+<pre><code>## [1] 841</code></pre>
+</div>
+<div id="rename" class="section level3">
+<h3>rename()</h3>
+<ul>
+<li>Esta función solo requiere indicar <code>NOMBRE_NUEVO = NOMBRE_VIEJO</code></li>
+</ul>
+<pre class="r"><code>df %&gt;%
+    rename(otro_delito_categorias = otro_en_ocasion_otro_delito) %&gt;%
+    select(Id_hecho, en_ocasion_otro_delito, otro_delito_categorias)</code></pre>
+<pre><code>## # A tibble: 20,517 × 3
+##    Id_hecho en_ocasion_otro_delito           otro_delito_categorias
+##       &lt;dbl&gt; &lt;chr&gt;                            &lt;chr&gt;                 
+##  1    11535 Sí Robo                          &lt;NA&gt;                  
+##  2    11535 Sí Robo                          &lt;NA&gt;                  
+##  3    11535 Sí Robo                          &lt;NA&gt;                  
+##  4    11535 Sí Robo                          &lt;NA&gt;                  
+##  5    11536 No fue en ocasión de otro delito &lt;NA&gt;                  
+##  6    11536 No fue en ocasión de otro delito &lt;NA&gt;                  
+##  7    11536 No fue en ocasión de otro delito &lt;NA&gt;                  
+##  8    11537 No fue en ocasión de otro delito &lt;NA&gt;                  
+##  9    11537 No fue en ocasión de otro delito &lt;NA&gt;                  
+## 10    11538 No fue en ocasión de otro delito &lt;NA&gt;                  
+## # … with 20,507 more rows</code></pre>
 </div>
 <div id="mutate" class="section level3">
 <h3>mutate()</h3>
 <ul>
 <li>Esta función nos permite crear y modificar columnas.</li>
-<li>Suele ser útil crear columnas como funciones de columnas ya existentes</li>
 <li>Su sintaxis es <code>mutate(nombre_de_la_columna = valores_de_la_columna)</code></li>
 </ul>
 <p>Por ejemplo, podemos crear una columna simple con el nombre de la base:</p>
-<pre class="r"><code>mutate_1 &lt;- robos_autos %&gt;%
-    mutate(columna_ejemplo = &quot;Registro de robos y recuperos de autos DNRPA&quot;)
-head(mutate_1)</code></pre>
-<pre><code>##                                    tramite_tipo tramite_fecha
-## 1 DENUNCIA DE ROBO O HURTO / RETENCION INDEBIDA    2021-09-22
-## 2 DENUNCIA DE ROBO O HURTO / RETENCION INDEBIDA    2021-09-23
-## 3 DENUNCIA DE ROBO O HURTO / RETENCION INDEBIDA    2021-09-08
-## 4 DENUNCIA DE ROBO O HURTO / RETENCION INDEBIDA    2021-09-06
-## 5 DENUNCIA DE ROBO O HURTO / RETENCION INDEBIDA    2021-09-10
-## 6 DENUNCIA DE ROBO O HURTO / RETENCION INDEBIDA    2021-09-13
-##   fecha_inscripcion_inicial registro_seccional_codigo
-## 1                2007-06-28                      4053
-## 2                2000-08-02                      4075
-## 3                1988-10-13                      4077
-## 4                1998-11-27                      4082
-## 5                1998-03-18                      4082
-## 6                2010-07-29                      5015
-##   registro_seccional_descripcion registro_seccional_provincia automotor_origen
-## 1                  CORDOBA Nº 13                      Córdoba         Nacional
-## 2                  CORDOBA Nº 22                      Córdoba         Nacional
-## 3                  CORDOBA Nº 23                      Córdoba         Nacional
-## 4             VILLA ALLENDE Nº 2                      Córdoba         Nacional
-## 5             VILLA ALLENDE Nº 2                      Córdoba         Nacional
-## 6                      SAN COSME                   Corrientes         Nacional
-##   automotor_anio_modelo automotor_tipo_codigo automotor_tipo_descripcion
-## 1                  2007                    NA                 FURGON 600
-## 2                  2000                    NA               RURAL 3 PTAS
-## 3                  1988                    NA            SEDAN 5 PUERTAS
-## 4                  1998                    NA                   S. WAGON
-## 5                  1998                    NA                      SEDAN
-## 6                  2010                    NA        FURGON VIDRIADO CON
-##   automotor_marca_codigo automotor_marca_descripcion automotor_modelo_codigo
-## 1                     34                     PEUGEOT                      DT
-## 2                     34                     PEUGEOT                      AG
-## 3                     37                     RENAULT                      42
-## 4                     08                   CHEVROLET                      66
-## 5                     08                   CHEVROLET                      52
-## 6                     34                     PEUGEOT                      KG
-##   automotor_modelo_descripcion automotor_uso_codigo automotor_uso_descripcion
-## 1 PARTNER FURGON D PLC CONFORT                    1                   Privado
-## 2                 PARTNER BRKD                    1                   Privado
-## 3               RENAULT 11 GTL                    1                   Privado
-## 4    CORSA WAGON GLS 1.7 DIESE                    1                   Privado
-## 5    CORSA GL 1.6 MPFI 4P C/AA                    1                   Privado
-## 6      PARTNER CONFORT 1.6 HDI                    1                   Privado
-##   titular_tipo_persona titular_domicilio_localidad titular_domicilio_provincia
-## 1               Física                     CORDOBA                     CORDOBA
-## 2               Física                     CORDOBA                     CORDOBA
-## 3               Física                     CORDOBA                     CORDOBA
-## 4               Física                  MENDIOLAZA                     CORDOBA
-## 5               Física                      SALDAN                     CORDOBA
-## 6             Jurídica                   SAN COSME                  CORRIENTES
-##    titular_genero titular_anio_nacimiento titular_pais_nacimiento
-## 1 No identificado                    1965               ARGENTINA
-## 2       Masculino                    2000               ARGENTINA
-## 3        Femenino                    1993               ARGENTINA
-## 4       Masculino                    1981               ARGENTINA
-## 5       Masculino                    1974               ARGENTINA
-## 6       No aplica                    1996               No aplica
-##   titular_porcentaje_titularidad titular_domicilio_provincia_id
-## 1                            100                             14
-## 2                            100                             14
-## 3                            100                             14
-## 4                            100                             14
-## 5                            100                             14
-## 6                            100                             18
-##   titular_pais_nacimiento_id                              columna_ejemplo
-## 1                        ARG Registro de robos y recuperos de autos DNRPA
-## 2                        ARG Registro de robos y recuperos de autos DNRPA
-## 3                        ARG Registro de robos y recuperos de autos DNRPA
-## 4                        ARG Registro de robos y recuperos de autos DNRPA
-## 5                        ARG Registro de robos y recuperos de autos DNRPA
-## 6                            Registro de robos y recuperos de autos DNRPA</code></pre>
-<p>Pero también podemos hacer algo más util. Por ejemplo, si echamos un vistazo a la información del domicilio y el país de nacimiento del titular, vemos que estos valores están todos en mayúscula:</p>
-<pre class="r"><code>filtrado_titular &lt;- robos_autos %&gt;%
-    select(titular_domicilio_provincia, titular_domicilio_localidad, titular_pais_nacimiento)
-
-str(filtrado_titular)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    3127 obs. of  3 variables:
-##  $ titular_domicilio_provincia: chr  &quot;CORDOBA&quot; &quot;CORDOBA&quot; &quot;CORDOBA&quot; &quot;CORDOBA&quot; ...
-##  $ titular_domicilio_localidad: chr  &quot;CORDOBA&quot; &quot;CORDOBA&quot; &quot;CORDOBA&quot; &quot;MENDIOLAZA&quot; ...
-##  $ titular_pais_nacimiento    : chr  &quot;ARGENTINA&quot; &quot;ARGENTINA&quot; &quot;ARGENTINA&quot; &quot;ARGENTINA&quot; ...</code></pre>
-<p>Vamos a guardar los valores como nombres propios con la función <code>str_to_title()</code> del paquete <code>stringr</code> <strong>NOTA: HACER QUE EN UN EJERCICIO PREVIO A LA CLASE DESCARGUEN EL PAQUETE</strong></p>
-<pre class="r"><code>mutate_2 &lt;- robos_autos %&gt;%
-    mutate(titular_domicilio_provincia = str_to_title(titular_domicilio_provincia),
-        titular_domicilio_localidad = str_to_title(titular_domicilio_localidad),
-        titular_pais_nacimiento = str_to_title(titular_pais_nacimiento)) %&gt;%
-    select(titular_domicilio_provincia, titular_domicilio_localidad, titular_pais_nacimiento)
-
-head(mutate_2)</code></pre>
-<pre><code>##   titular_domicilio_provincia titular_domicilio_localidad
-## 1                     Cordoba                     Cordoba
-## 2                     Cordoba                     Cordoba
-## 3                     Cordoba                     Cordoba
-## 4                     Cordoba                  Mendiolaza
-## 5                     Cordoba                      Saldan
-## 6                  Corrientes                   San Cosme
-##   titular_pais_nacimiento
-## 1               Argentina
-## 2               Argentina
-## 3               Argentina
-## 4               Argentina
-## 5               Argentina
-## 6               No Aplica</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;%
+    mutate(columna_ejemplo = &quot;Registro de homicidios dolosos 2017-2020&quot;)
+table(df$columna_ejemplo)</code></pre>
+<pre><code>## 
+## Registro de homicidios dolosos 2017-2020 
+##                                    20517</code></pre>
+<p>Pero también podemos hacer algo más util. Por ejemplo, si echamos un vistazo a la información de la provincia vemos que estos valores están todos en mayúscula:</p>
+<pre class="r"><code>df %&gt;%
+    select(provincia) %&gt;%
+    head()</code></pre>
+<pre><code>## # A tibble: 6 × 1
+##   provincia
+##   &lt;chr&gt;    
+## 1 NEUQUEN  
+## 2 NEUQUEN  
+## 3 NEUQUEN  
+## 4 NEUQUEN  
+## 5 NEUQUEN  
+## 6 NEUQUEN</code></pre>
+<p>Vamos a guardar los valores como nombres propios con la función <code>str_to_title()</code> del paquete <code>stringr</code>.</p>
+<pre class="r"><code>df %&gt;%
+    mutate(provincia = str_to_title(provincia)) %&gt;%
+    select(provincia) %&gt;%
+    head()</code></pre>
+<pre><code>## # A tibble: 6 × 1
+##   provincia
+##   &lt;chr&gt;    
+## 1 Neuquen  
+## 2 Neuquen  
+## 3 Neuquen  
+## 4 Neuquen  
+## 5 Neuquen  
+## 6 Neuquen</code></pre>
 <ul>
-<li>Es una función muy útil a la hora de recodificar variables, sobre todo cuando la usamos con la función <code>case_when()</code>.</li>
+<li>Es una función muy útil a la hora de recodificar variables, sobre todo cuando la usamos con la función <code>case_when()</code>. Supongamos que queremos agrupar los tipos de relaciones de víctima con el inculpado en siete grupos: familiar, laboral, de pareja, sin relación, otros, sin datos y no corresponde.</li>
 </ul>
-<p>Supongamos que queremos hacer una variable codificada del género del titular. Queremos que 1 sea “Masculino”, 2 “Femenino” y 999 en los casos que no se contestó o no corresponde.</p>
-<pre class="r"><code>mutate_3 &lt;- robos_autos %&gt;%
-    mutate(genero_codif = case_when(titular_genero == &quot;Masculino&quot; ~ 1, titular_genero ==
-        &quot;Femenino&quot; ~ 2, titular_genero %in% c(&quot;No identificado&quot;, &quot;No aplica&quot;) ~ 999))
+<pre class="r"><code>df &lt;- df %&gt;%
+    mutate(relacion_agrup = case_when(relacion_victima_inculpado %in% c(&quot;Hermano/a&quot;,
+        &quot;Hijo/a&quot;, &quot;Otros vínculos familiares&quot;, &quot;Padre/Madre&quot;) ~ &quot;Familiar&quot;, relacion_victima_inculpado %in%
+        c(&quot;Cliente / proveedor&quot;, &quot;Empleado&quot;, &quot;Empleador&quot;, &quot;Socio (Relación comercial)&quot;) ~
+        &quot;Laboral&quot;, relacion_victima_inculpado %in% c(&quot;Conyuge/ pareja&quot;, &quot;Ex conyuge / ex pareja&quot;) ~
+        &quot;De pareja&quot;, relacion_victima_inculpado %in% c(&quot;Sin relación&quot;) ~ &quot;Sin relación&quot;,
+        relacion_victima_inculpado %in% c(&quot;Otras relaciones no familiares&quot;) ~ &quot;Otros&quot;,
+        relacion_victima_inculpado == &quot;Sin determinación&quot; ~ &quot;Sin datos&quot;, relacion_victima_inculpado ==
+            &quot;No corresponde&quot; ~ &quot;No corresponde&quot;))
 
-table(mutate_3$titular_genero, mutate_3$genero_codif)</code></pre>
-<pre><code>##                  
-##                      1    2  999
-##   Femenino           0  805    0
-##   Masculino       1607    0    0
-##   No aplica          0    0  136
-##   No identificado    0    0  579</code></pre>
-</div>
-<div id="parte-de-ejercicios" class="section level3">
-<h3>Parte de ejercicios</h3>
+table(df$relacion_agrup)</code></pre>
+<pre><code>## 
+##      De pareja       Familiar        Laboral No corresponde          Otros 
+##            847            778             43          11094           1427 
+##      Sin datos   Sin relación 
+##           3900           2428</code></pre>
 </div>
 </div>
 

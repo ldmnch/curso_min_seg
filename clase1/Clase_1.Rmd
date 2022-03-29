@@ -221,6 +221,12 @@ objeto_3 > objeto_4
 "Ocupado" == "Desocupado"
 ```
 
+- `%in%` para contrastar si un valor se  encuentra en un vector 
+
+```{r}
+"Ocupado" %in% c("Desocupado", "Ocupado", "Inactivo")
+```
+
 - `!` como negación. 
 
 ```{r}

@@ -13,3 +13,5 @@
 ### 6. Cree un objeto donde estén únicamente aquellas filas que provincia == "BUENOS AIRES"
 
 ### 7. Guardar esta última base de datos en formato .RDS
+
+### 8. Instalen los paquetes tidyverse, stringr y lubridate.
