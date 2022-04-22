@@ -3,23 +3,20 @@
 
 ### 2. Usando tidyverse, ¿cuál fue el mes que tuvo más casos? 
 
-### 3. ¿Cuál de las fuerzas tuvo, en proporción, mayor cantidad de casos fuera de servicio? 
-### Usar group_by() y summarise(). 
-### Expresar los resultados en una base de datos y guardarla como objeto.
+### 3. Pasar a minúscula todas las columnas del dataframe.
 
-### 4. Darle a la última base generada formato de tabla de frecuencias con valores en proporción.  
+### 4. Pasar los NA a 0. 
 
-### 5. Renombrar las variables de la última base creada, pasándolas a minúscula y convirtiendo los espacios en guiones. 
+### 5. Agregar a la base una columna que tenga en formato string: mes-año-hora. 
+### Pista: en la primera clase hay una función útil para concatenar string. 
 
-### 6. Pasar los NA a 0. 
+### 6. Darle a esta última columna el formato de fecha. 
 
-### 7. Agregar a la base una columna que tenga el mes-año-hora. 
-### Para esto pueden usar una función que vimos en la primera clase: paste0. 
+### 7. ¿Cuál de las fuerzas tuvo mayor cantidad de casos fuera de servicio? 
+### Expresar los resultados en una tibble y guardarla como objeto.
 
-### 8. Darle a esta última columna el formato de fecha. 
-
-### 9. Crear una estructura condicional que 
+### 8. Crear una estructura condicional que 
 ###- calcule la cantidad de casos por aglomerado en caso de que la base de datos tenga más de 1.000 registros 
 ###- calcule la cantidad de casos por provincia en caso de que la base de datos tenga menos de 1.000 registros
 
-### 10. Crear un loop que devuelva los valores de la columna "Provincia" que no son Buenos Aires
+### 9. Crear un loop que devuelva los valores de la columna "Provincia" que no son Buenos Aires

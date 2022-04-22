@@ -22,12 +22,11 @@ knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE)
 - La clase de hoy vamos a seguir con dplyr, viendo cómo usar funciones para crear medidas resumen, unir dataframes y "pivotearlos". 
 - También vamos a introducir el paquete `lubridate` para trabajar con formatos de fecha.
 
-Primero, vamos a importar la base de datos de robos de autos y el paquete tidyverse: 
+Primero, vamos a importar la base de homicidios dolosos y el paquete tidyverse: 
 ```{r}
 library(tidyverse)
 
-robos_autos <- read.table("./data/dnrpa-robos-recuperos-autos-202109.csv", sep = ",", 
-                        header = TRUE, encoding = "UTF-8", stringsAsFactors = F)
+df <- readxl::read_excel("./data/Integrado_HD_base_usuaria_2017-2020.xlsx")
 
 ```
 
@@ -37,23 +36,25 @@ robos_autos <- read.table("./data/dnrpa-robos-recuperos-autos-202109.csv", sep =
 * `group_by` cambia la unidad de análsis del dataset a grupos. Así, al llamar a cualqyuer verbo de `dplyr` se aplica "por grupo",
 * combinándolo con `summarize()`, nos permite hacer una tabla con una medida resumen de las variables que querramos. 
 
-Por ejemplo, podemos hacer el conteo de frecuencias de los tipos de trámite:
+Por ejemplo, podemos hacer el conteo de frecuencias de los tipos de arma utilizadas:
 ```{r}
-robos_autos %>%
-        group_by(tramite_tipo)%>%
+df %>%
+        group_by(clase_arma)%>%
         summarize(n=n())
 ```
-El tipo de trámite según fecha
+
+El tipo de arma utilizado según la provincia
 ```{r}
-robos_autos %>%
-        group_by(tramite_fecha, tramite_tipo)%>%
+df %>%
+        group_by(provincia, clase_arma)%>%
         summarize(n=n())
 ```
-La media de año del modelo de coche según las marcas: 
+La media de víctimas según el año: 
 ```{r}
-robos_autos %>%
-        group_by(automotor_marca_descripcion)%>%
-        summarize(mean_anio_automotor=round(mean(automotor_anio_modelo,na.rm=TRUE)))
+df %>%
+        group_by(anio)%>%
+        summarize(mean_vic=round(mean(cant_vic,na.rm=TRUE)),
+                  mean_inc = round(mean(cant_inc, na.rm=TRUE)))
 ```
 
 * Si quiero seguir trabajando con el objeto que está agrupado sin esos grupos, tengo que usar la función `ungroup()`
@@ -65,17 +66,19 @@ robos_autos %>%
         + `values_to`: indico el nombre de la columna que va a contener los valores de las variables
 
 ```{r}
-medidas_resumen <- robos_autos %>%
-  group_by(registro_seccional_provincia) %>% 
-  summarise(media_anio = mean(automotor_anio_modelo, na.rm = TRUE),
-            mediana_anio = median(automotor_anio_modelo, na.rm = TRUE)) %>% 
-  select(registro_seccional_provincia, 
-         media_anio, mediana_anio) 
+medidas_resumen <- df %>%
+  group_by(provincia) %>% 
+  summarise(media_inc = mean(cant_inc, na.rm = TRUE),
+            mediana_inc = median(cant_inc, na.rm = TRUE)) %>% 
+  select(provincia, 
+         media_inc, mediana_inc) 
 
 pivot_longer_resumen <- medidas_resumen%>% 
-  pivot_longer(cols = c(media_anio, mediana_anio), 
+  pivot_longer(cols = c(media_inc, mediana_inc), 
                names_to = "variable", 
                values_to = "valor")
+
+pivot_longer_resumen
 ```
 
 - `pivot_wider` es la operación inversa. Crea variables a partir de filas, y "alarga" la base de datos. 
@@ -84,7 +87,7 @@ pivot_longer_resumen <- medidas_resumen%>%
   + `values_from`: indico en qué columna están los valores de las variables
 
 ```{r}
-pivot_longer_resumen%>% pivot_wider(id_cols= registro_seccional_provincia, 
+pivot_longer_resumen%>% pivot_wider(id_cols= provincia, 
                                 names_from=variable,
                                 values_from = valor)
 ```
@@ -101,13 +104,12 @@ pivot_longer_resumen%>% pivot_wider(id_cols= registro_seccional_provincia,
 Por ejemplo, supongamos que queremos agregar a esta base de datos la información geográfica de cada provincia para poder marcarla en un mapa. Vamos a usar una base de datos del [IGN](https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG).
 
 ```{r}
-geo <- read_csv('./data/provincia.csv') %>% select(nam, geom)
-
+geo <- sf::read_sf('./data/pxlocdatos.shp') %>% select(codpcia, coddpto, geometry)
 head(geo)
 ```
 
 ```{r}
-df_merged <- robos_autos %>% left_join(geo, by = c("registro_seccional_provincia" = "nam")) 
+df_merged <- df %>% left_join(geo, by = c("Cod_INDEC_Prov" = "codpcia", "codigo_departamento" = "coddpto")) 
 
 colnames(df_merged)
 ```
@@ -121,12 +123,9 @@ colnames(df_merged)
   
 Veamos el formato de nuestras fechas en el dataframe que estamos trabajando:
 ```{r}
-class(robos_autos$tramite_fecha)
+class(df$fecha_hecho)
 ```
-```{r}
-class(robos_autos$fecha_inscripcion_inicial)
-```
-Vemos que no están en el formato correcto. Esto es algo común cuando trabajamos con datos, tenemos que formatear las columnas para que estén en el formato fecha y podamos trabajar con ellas. Para ello, vamos a usar un paquete de tidyverse...
+Este es un formato de dato que manejar la hora y la fecha. El almacenamiento interno de una fecha en formato POSIXct es el número de segundos transcurridos desde el 1 de enero de 1970. Para fechas anteriores se usan números negativos.
 
 ### `lubridate` 
 
@@ -142,31 +141,33 @@ library(lubridate)
 
 Mediante la combinacion de los caracteres **dmy_hms** que representan a día(d), mes(m), año(y), hora(h), minuto(m) y segundo(s) podemos convertir un número (o un string) hacia una fecha.   
 
-Para las columnas de nuestro dataframe, que están en formato año-mes-día, la función `ymd()` nos permite convertir las columnas a fecha. 
-
 ```{r}
-robos_autos <- robos_autos %>% mutate(tramite_fecha = ymd(tramite_fecha),
-                       fecha_inscripcion_inicial = ymd(fecha_inscripcion_inicial))
 
-class(robos_autos$tramite_fecha)
-class(robos_autos$fecha_inscripcion_inicial)
+fecha_1 <- "30 de abril 2021"
+
+class(fecha_1)
+
+fecha_1_formato <- dmy(fecha_1)
+
+class(fecha_1_formato)
 ```
 También podría crear una fecha con horas, minutos y segundos:
 
 ```{r}
-ejemplo_1 <- "2020/08/04 13:40:43"
+fecha_2 <- "2020/08/04 13:40:43"
 
-ejemplo_1<-ymd_hms(ejemplo_1)
-class(ejemplo_1)
+fecha_2<-ymd_hms(fecha_2)
+class(fecha_2)
 ```
 
 Y para formatos menos estandarizados, se puede usar la función `parse_date_time()`
 
 ```{r}
-ejemplo_2 <- c("Oct 4", "May 20", "Feb 15")
+fecha_3 <- c("Oct 4", "May 20", "Feb 15")
 
-parse_date_time(ejemplo_2, orders = 'md')
+parse_date_time(fecha_3, orders = 'md')
 ```
+
 También podemos **extraer** información de las fechas. Por ejemplo, podemos desagregar la fecha de trámite en:
 
 - día (de la semana y el número)
@@ -174,30 +175,30 @@ También podemos **extraer** información de las fechas. Por ejemplo, podemos de
 - año
 
 ```{r}
-data_ejemplo <- robos_autos %>% select(tramite_fecha) %>%
-        mutate(dia = wday(tramite_fecha),
-               dia_semana = wday(tramite_fecha, label = TRUE),
-               mes = month(tramite_fecha),
-               mes_nombre = month(tramite_fecha, label =TRUE),
-               anio = year(tramite_fecha))
+data_ejemplo_fecha <- df %>% select(fecha_hecho) %>%
+        mutate(dia = wday(fecha_hecho),
+               dia_semana = wday(fecha_hecho, label = TRUE),
+               mes = month(fecha_hecho),
+               mes_nombre = month(fecha_hecho, label =TRUE),
+               anio = year(fecha_hecho))
 
-head(data_ejemplo)
+head(data_ejemplo_fecha)
 ```
 Finalmente, podemos hacer distintas operaciones sobre las fechas. Por ejemplo, podemos calcular la cantidad de tiempo que pasó entre el primer registro de trámite y el último:
 
 ```{r}
-max(robos_autos$tramite_fecha)-min(robos_autos$tramite_fecha)
+max(df$fecha_hecho)-min(df$fecha_hecho)
 ```
 Podemos agregarle días, meses, o años a una fecha:
 
 ```{r}
-ejemplo_3 <- robos_autos$tramite_fecha[4]
+fecha_4 <- df$fecha_hecho[4]
 
-ejemplo_3
+fecha_4
 
-ejemplo_3+days(4)
-ejemplo_3+months(5)
-ejemplo_3+years(2)
+fecha_4+days(4)
+fecha_4+months(5)
+fecha_4+years(2)
 ```
 ## Programación funcional 
 
@@ -232,7 +233,7 @@ if( 10+5 == 148.24){
 
 - Veamos un ejemplo. Queremos que nuestro código nos indique si la fecha de ejecución del código coincide con la de la última actualización de la base de datos. Caso contrario, queremos que se nos indique la diferencia de tiempo entre ambas. 
 ```{r}
-ultima.actualiz.base<- max(robos_autos$tramite_fecha)
+ultima.actualiz.base<- max(df$fecha_hecho)
 ultima.actualiz.base
 ```
 - ¿Es dicha fecha igual a la fecha actual de ejecución del código? Para ello podemos usar la función **Sys.Date()** de RBase

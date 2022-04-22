@@ -1,9 +1,9 @@
 
-# "Intro a R"
+# Introducción a la programación estadística con R
 
-# Presentacion 
+# Presentación 
 
-Esta es la página del curso de **Introducción a R** para el Ministerio de Seguridad de la Nación. En los links de arriba van a poder ver los .RMarkdowns y presentaciones en el navegador, y en el botón de abajo van a poder descargar la totalidad del curso. 
+Esta es la página del curso de **Introducción a R** para el **Ministerio de Seguridad de la Nación**. En los links de arriba van a poder ver los .RMarkdowns y presentaciones en el navegador, y en el botón de abajo van a poder descargar la totalidad del curso. 
 
 # Contenidos y materiales
 ### Clase 1 Introducción a  R base. 

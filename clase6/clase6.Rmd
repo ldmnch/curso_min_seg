@@ -1,0 +1,36 @@
+---
+title: "Clase 6 - Mapas e interactividad"
+author: "Domenech Burin, Laia"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+theme: Boadilla
+---
+
+## Mirando al espacio
+
+Los mapas son una unidad visual que puede reconocer prácticamente la totalidad de la población de una región determinada. La visualización de mapas  y el análisis espacial solía estar reservado para especialistas, debido a la complejidad y costo de este tipo de procesos. Pero durante las dos últimas décadas la tecnología digital cambió el panorama. Una dramática caída en el costo asociado a adquirir y procesar información geográfica (pensemos en satélites y computadoras multiplicándose y bajando de precio) dio paso al mapa digital como herramienta universal. 
+
+Hoy en día, hacer mapas se ha vuelto más fácil que nunca antes. Existen cada vez más repositorios con información georreferenciada de acceso publico -datasets que incluyen información precisa sobre su ubicación geográfica. Al mismo tiempo, maduran y se hacen más fáciles de usar las herramientas para análisis y visualización espacial. 
+
+En R contamos con varios paquete de funciones que permiten manipular información espacial con facilidad. A continuación vamos a aprender a combinarlos con las herramientas que ya hemos aprendido, para hacer análisis geográfico y crear nuestros propios mapas.
+
+### Geometrías
+
+Los archivos de datos geográficos relacionados con fenómenos sociales (datos de cosas que somos y hacemos los humanos, como composición de población, trazado de rutas, ubicación de hospitales, etc) suelen ser de tipo vectorial. Los datos vectoriales expresan la posición y extensión de cosas mediante geometrías, que pueden ser de puntos, de líneas, o de polígonos. En la jerga de los sistemas de información geográfica, se les llama "capas" (_layers_) a los archivos que contienen estas geometrías, y en ese sentido se hablar de combinar capas para crear mapas.
+
+![](./img/puntos_lineas_polis.png){width=60%}
+
+* Un archivo geográfico con geometría de __puntos__ se utiliza para marcar __posiciones__: por ejemplo, puntos que señalen la ubicación de hospitales.
+
+* La geometría de __líneas__ permite mostrar __recorridos__: como por ejemplo la extensión de ríos, de autopistas o de calles. 
+
+* Los __polígonos__ se usan cuando hay que representar __superficies__: el territorio de barrios, provincias o países; el terreno ocupado por parques y plazas, la extensión de parcelas, los límites de áreas especiales como un coto de caza, etc.
+
+### Los datos georreferenciados
+
+Los datos georeferenciados reciben su nombre justamente porque están vinculados a locaciones en el mundo físico. Estaciones de subte, hogares, reservas ecológicas, cualquier lugar que exista. Si bien hoy en día es más fácil que nunca trabajar con este tipo de datos, tienen algunas complicaciones. 
+
+La principal de ellas está vinculada con la forma esférica de la Tierra. Esta forma hace que sea imposible de representar a la exactitud en un plano de dos dimensiones. El proceso a través del cual "achatamos" la tierra para dibujarla en un mapa plano es la **proyección**.  
