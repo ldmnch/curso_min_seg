@@ -13,7 +13,7 @@ theme: Boadilla
 
 Los mapas son una unidad visual que puede reconocer prácticamente la totalidad de la población de una región determinada. La visualización de mapas  y el análisis espacial solía estar reservado para especialistas, debido a la complejidad y costo de este tipo de procesos. Pero durante las dos últimas décadas la tecnología digital cambió el panorama. Una dramática caída en el costo asociado a adquirir y procesar información geográfica (pensemos en satélites y computadoras multiplicándose y bajando de precio) dio paso al mapa digital como herramienta universal. 
 
-Hoy en día, hacer mapas se ha vuelto más fácil que nunca antes. Existen cada vez más repositorios con información georreferenciada de acceso publico -datasets que incluyen información precisa sobre su ubicación geográfica. Al mismo tiempo, maduran y se hacen más fáciles de usar las herramientas para análisis y visualización espacial. 
+Hoy en día, hacer mapas resulta algo muy fácil. Existen cada vez más repositorios con información georreferenciada de acceso publico -datasets que incluyen información precisa sobre su ubicación geográfica. Al mismo tiempo, maduran y se hacen más fáciles de usar las herramientas para análisis y visualización espacial. 
 
 En R contamos con varios paquete de funciones que permiten manipular información espacial con facilidad. A continuación vamos a aprender a combinarlos con las herramientas que ya hemos aprendido, para hacer análisis geográfico y crear nuestros propios mapas.
 
@@ -33,4 +33,149 @@ Los archivos de datos geográficos relacionados con fenómenos sociales (datos d
 
 Los datos georeferenciados reciben su nombre justamente porque están vinculados a locaciones en el mundo físico. Estaciones de subte, hogares, reservas ecológicas, cualquier lugar que exista. Si bien hoy en día es más fácil que nunca trabajar con este tipo de datos, tienen algunas complicaciones. 
 
-La principal de ellas está vinculada con la forma esférica de la Tierra. Esta forma hace que sea imposible de representar a la exactitud en un plano de dos dimensiones. El proceso a través del cual "achatamos" la tierra para dibujarla en un mapa plano es la **proyección**.  
+La principal de ellas está vinculada con la forma esférica irregular de la Tierra. No es un círculo perfecto, sino que está "achatada" en los polos, dificultando la matemática necesaria para comparar posiciones y medir distancias. Esta forma hace que sea imposible de representar a la exactitud en un plano de dos dimensiones. El proceso a través del cual desplegamos la tierra en dos para dibujarla en un mapa plano es la **proyección**.  
+
+Las proyecciones cartográficas son instrucciones para traducir a un plano la disposición de puntos ubicados en la esfera terrestre. Toman como base los CRS: un sistema de números que definen ubicaciones sobre la superficie de la Tierra. El más conocido es el que usa latitud y longitud, para definir posiciones en los ejes norte-sur y este-oeste.
+
+Inevitablemente, las proyecciones van a introducir distorsiones porque uan superficie curva no puede ser proyectada con exactitud en una superficie plana. Más específicamente, la proyección puede preservar ángulos o áreas pero no ambas. Existen muchísimas proyecciones distintas, cada una pensada para minimizar alguno de los tipos de distorsión, o para encontrar una solución de compromiso que los balancee.
+
+La proyección más famosa y utilizada es la Mercator, que fue desarrollada en el siglo 16 para la navegación marítima. Esta proyección tiene como ventaja que no distorsiona las direcciones, por lo que permite fijar un rumbo de navegación consultando el mapa. Su principal problema es que produce una distorsión notable en las áreas cercanas a los polos: Groenlandia aparenta el mismo tamaño que toda África, cuando en realidad tiene sólo un quinceavo de su superficie. 
+
+Sin embargo, Google la eligió para sus mapas en línea, y por razones de compatibilidad otros proveedores de mapas digitales la adoptaron también. Así, y para entendible irritación de especialistas en geografía, Mercator se convirtió en el estándar de facto para aplicaciones geográficas y mapas en la web.
+
+![](./img/mercator.png){width=50%}
+
+En la práctica, si trabajamos en forma frecuente con archivos georreferenciados vamos a sufrir tarde o temprano de problemas de coordenadas o proyección. El más común de ellos: tener una fuentes de datos geográficos que no podemos comparar con otras, porque desconocemos el sistema de coordenadas que se usó para crearla; es decir, no podemos saber a que posición sobre el planeta corresponde cada observación en los datos.
+
+### Importando la data
+
+Otro problema asociado a trabajar con datos geográficos es el de los formatos de archivo. El formato más común es el denominado “shapefile”, inventado por la empresa ESRI (los creadores del software ArcGIS). Es un formato incómodo porque guarda la información en varios archivos distintos, que suelen ser combinados en un archivo .zip para su distribución. Un inconveniente aún mayor es que los nombres de las variables en un shapefile deben tener 10 caracteres o menos, lo que facilita el uso de abreviaturas ininteligibles. A pesar de éstos y otros detrimentos, el formato es tan común que se ha vuelto sinónimo de archivo con información geográfica, y resiste a pesar de los esfuerzos por reemplazarlo con alternativas más modernas. Una de ellas es “GeoJSON”, un estándar abierto que corrige los dos inconvenientes mencionados antes. Para nuestros ejercicios usaremos datos geográficos en esta último formato.
+
+Vamos a continuar trabajando con `ggplot2`, pero además vamos a incluir el paquete `sf` que sirve para trabajar específicamente con datos georeferenciados. 
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(sf)
+```
+Practicaremos con datos georeferenciados en polígonos: las provincias de Argentina. 
+
+
+```{r}
+pba_geo <- read_sf("./data/deptos_pba.geojson")
+```
+
+Veamos cómo está compuesto este dataframe:
+
+```{r}
+head(provincias)
+```
+La data contiene información básica de cada provincia. Sin embargo, van a ver tiene una columna particular, cuyo formato no habíamos visto aún: `geometry`. Esta columna tiene la información de una serie de puntos que trazan un **polígono**. En otras palabras, contiene la forma de cada provincia Por esto esta variable será fundamental para realizar mapas en R, es el insumo básico de donde el programa saca la información para trazarlos. 
+
+A partir de esto, graficar un mapa es tan simple como usar dos líneas de ggplot con la geometría `geom_sf`. 
+
+Por una cuestión de memoria RAM de la computadora, vamos a restringir el análisis a los departamentos de PBA. 
+
+
+```{r}
+ggplot(pba_geo)+
+        geom_sf()
+```
+
+### Información en mapas
+
+Con frecuencia vemos información presentada en mapas. Un ejemplo de ellos es el [mapa del delito](https://mapa.seguridadciudad.gob.ar/) de CABA, otro es el [mapa de accesibilidad](https://acceso.shinyapps.io/mapa/) de factor~data.  Detengámonos un segundo a ver, ¿cuáles son las propiedades estéticas utilizadas para mostrar la información?
+
+La forma más común de mostrar información geográfica es a través de **mapas coropléticos**, donde se colorean regiones individualmente de acuerdo a la dimensión de la información que se quiere mostrar. Para hacerlo, nada más hay que asignarle al atributo `fill`la dimensión que queremos plasmar. 
+
+Vamos a agregarle capas de información a nuestro mapa. Por ejemplo, supongamos que queremos ver en el mapa qué provincias tuvieron una mayor cantidad de casos en el año 2020. Primero vamos a hacer el `group_by`: 
+
+Ahora vamos a hacer distintas operaciones para que las provincias estén escritas en el mismo formato y sea posible joinear los dos dataframes:
+
+```{r}
+df <- readxl::read_xlsx("data/Integrado_HD_base_usuaria_2017-2020.xlsx")
+#Formato
+pba <- df %>% filter(provincia == "BUENOS AIRES") 
+
+pba <- pba %>% filter(departamento != "Departamento sin determinar")
+
+pba <- pba %>% filter(anio ==2020)
+```
+
+Luego, joineamos las dos bases. Una cosa **muy importante** es que siempre hay que poner la base con las geometrías a la izquierda, de lo contrario la columna `geometry` pierde el formato. 
+
+```{r}
+#Join
+pba_geo <- pba_geo %>% left_join(pba, by=c("in1"="Cod_INDEC"))
+```
+
+Por una cuestión de memoria de la computadora, y para que no nos crashee todo el programa, vamos a trabajar únicamente con datos de 2020 de la región pampeana (Buenos Aires, Santa Fe, Córdoba, La Pampa y San Luis)
+
+```{r}
+tb1 <- pba_geo%>%
+        group_by(anio, nam)%>%
+        summarise(n=n_distinct(Id_hecho, na.rm = TRUE)) 
+
+```
+
+```{r}
+ggplot(tb1, aes(fill=n))+
+        geom_sf()
+```
+
+
+Acá vemos algo, pero las líneas grises que dibujan cada polígono nos dificultan ver los datos con claridad. Vamos a sacar estas líneas asignándole al parámetro `color = NA`:
+
+```{r}
+ggplot(tb1)+
+        geom_sf(aes(fill = n), color = NA)
+```
+
+Hasta acá está todo bien, pero 
+
+```{r}
+proyecciones <- readxl::read_excel("data/proy_pba.xls")
+
+proyecciones <- proyecciones %>% mutate(Proyecciones_2020 = as.numeric(Proyecciones_2020))
+
+pba_geo <- pba_geo %>% 
+        left_join(proyecciones, by = c("nam" = "Partido"))
+```
+
+Algo importante que no hemos mencionado aún es la importancia de "normalizar" las variables antes de mostrarlas en un mapa. En general, los lugares más grandes van a contener dentro "más" de cualquier variable que los lugares pequeños (sean personas, comercios o accidentes). Es de esperarse que en el barrio más pequeño de la ciudad vivan menos personas que en el más grande; lo que es útil saber es si los valores son bajo o altos para un área _con esa extensión_. Ejemplos típicos: 
+
+* En lugar de mostrar "número de crímenes por barrio" es más instructivo mostrar el número de crímenes per cápita; de lo contrario es de esperar que los lugares más poblados siempre registren más incidentes, lo cual no agrega demasiada información.  
+
+```{r}
+tb2 <- pba_geo%>%
+        group_by(anio, nam, Proyecciones_2020)%>%
+        summarise(n=n_distinct(Id_hecho, na.rm = TRUE)) 
+
+tb2 <- tb2 %>% mutate(hab1000 = Proyecciones_2020/1000)
+```
+
+```{r}
+ggplot(tb2)+
+        geom_sf(aes(fill = n/hab1000), color = NA)
+```
+
+Este último gráfico representa de forma mucho mas precisa la distribución de habitantes en la ciudad, haciendo saltar a la vista los núcleos con mayor densidad de población. Pero tenemos una mejora más por realizar: elegir una escala de color que haga más legible el gráfico, ayudando al ojo a diferenciar las áreas donde la densidad es particularmente alta o baja. Apelamos a ["viridis"](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html), una escala diseñada para ser fácil de interpretar... y lucir bien de paso. Para usar virids, agregamos `scale_fill_viridis_d()` cuando se muestra una variable categórica, y `scale_fill_viridis_c() `cuando se trata de una variable continua, nuestro caso en este momento.
+
+```{r}
+library(viridis)
+
+ggplot(tb2)+
+        geom_sf(aes(fill = n/hab1000), color = NA)+
+        scale_fill_viridis_c()+
+        labs(title = "Provincia de Buenos Aires",
+             subtitle = "Homicidios dolosos en 2020",
+             fill = "HD/1000 habitantes")+
+        theme_minimal()
+```
+```{r}
+tb2 %>%
+        #filter(anio==2020)%>%
+        mutate(tasa = n/hab1000) %>%
+        arrange(desc(tasa))
+```
+

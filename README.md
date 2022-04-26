@@ -5,6 +5,8 @@
 
 Esta es la página del curso de **Introducción a R** para el **Ministerio de Seguridad de la Nación**. En los links de arriba van a poder ver los .RMarkdowns y presentaciones en el navegador, y en el botón de abajo van a poder descargar la totalidad del curso. 
 
+Para empezar el curso es necesario que primero descarguen R y RStuido. [Aquí tienen un instructivo de cómo hacerlo.](./instalacion_R.pdf)
+
 # Contenidos y materiales
 ### Clase 1 Introducción a  R base. 
 
