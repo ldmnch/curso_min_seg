@@ -246,7 +246,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Clase 3</h1>
 <h4 class="author">Domenech Burin, Laia</h4>
-<h4 class="date">04 abril, 2022</h4>
+<h4 class="date">27 abril, 2022</h4>
 
 </div>
 
@@ -399,21 +399,20 @@ head(select_prueba_2)</code></pre>
 <li>También se puede seleccionar un intervalo de columnas, usando el <code>:</code></li>
 </ul>
 <pre class="r"><code>select_prueba_3 &lt;- df %&gt;%
-    select(anio, departamento, provincia, tipo_lugar:otro_motivo_origen_registro)
+    select(tipo_lugar:otro_motivo_origen_registro)
 
 head(select_prueba_3)</code></pre>
-<pre><code>## # A tibble: 6 × 11
-##    anio departamento provincia tipo_lugar           otro_tipo_lugar clase_arma  
-##   &lt;dbl&gt; &lt;chr&gt;        &lt;chr&gt;     &lt;chr&gt;                &lt;chr&gt;           &lt;chr&gt;       
-## 1  2017 Confluencia  NEUQUEN   Domicilio particular &lt;NA&gt;            Arma de fue…
-## 2  2017 Confluencia  NEUQUEN   Domicilio particular &lt;NA&gt;            Arma de fue…
-## 3  2017 Confluencia  NEUQUEN   Domicilio particular &lt;NA&gt;            Arma de fue…
-## 4  2017 Confluencia  NEUQUEN   Domicilio particular &lt;NA&gt;            Arma de fue…
-## 5  2017 Confluencia  NEUQUEN   Vía pública          &lt;NA&gt;            Arma de fue…
-## 6  2017 Confluencia  NEUQUEN   Vía pública          &lt;NA&gt;            Arma de fue…
-## # … with 5 more variables: otro_clase_arma &lt;chr&gt;, en_ocasion_otro_delito &lt;chr&gt;,
-## #   otro_en_ocasion_otro_delito &lt;chr&gt;, motivo_origen_registro &lt;chr&gt;,
-## #   otro_motivo_origen_registro &lt;chr&gt;</code></pre>
+<pre><code>## # A tibble: 6 × 8
+##   tipo_lugar         otro_tipo_lugar clase_arma otro_clase_arma en_ocasion_otro…
+##   &lt;chr&gt;              &lt;chr&gt;           &lt;chr&gt;      &lt;chr&gt;           &lt;chr&gt;           
+## 1 Domicilio particu… &lt;NA&gt;            Arma de f… &lt;NA&gt;            Sí Robo         
+## 2 Domicilio particu… &lt;NA&gt;            Arma de f… &lt;NA&gt;            Sí Robo         
+## 3 Domicilio particu… &lt;NA&gt;            Arma de f… &lt;NA&gt;            Sí Robo         
+## 4 Domicilio particu… &lt;NA&gt;            Arma de f… &lt;NA&gt;            Sí Robo         
+## 5 Vía pública        &lt;NA&gt;            Arma de f… &lt;NA&gt;            No fue en ocasi…
+## 6 Vía pública        &lt;NA&gt;            Arma de f… &lt;NA&gt;            No fue en ocasi…
+## # … with 3 more variables: otro_en_ocasion_otro_delito &lt;chr&gt;,
+## #   motivo_origen_registro &lt;chr&gt;, otro_motivo_origen_registro &lt;chr&gt;</code></pre>
 <ul>
 <li>Podemos hacer una selección por <strong>posición de la columna</strong>:</li>
 </ul>

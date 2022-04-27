@@ -58,8 +58,7 @@ library(tidyverse)
 library(ggplot2)
 library(sf)
 ```
-Practicaremos con datos georeferenciados en polígonos: las provincias de Argentina. 
-
+Practicaremos con datos georeferenciados en polígonos: los departamentos de la Provincia de Buenos Aires. 
 
 ```{r}
 pba_geo <- read_sf("./data/deptos_pba.geojson")
@@ -68,14 +67,11 @@ pba_geo <- read_sf("./data/deptos_pba.geojson")
 Veamos cómo está compuesto este dataframe:
 
 ```{r}
-head(provincias)
+head(pba_geo)
 ```
 La data contiene información básica de cada provincia. Sin embargo, van a ver tiene una columna particular, cuyo formato no habíamos visto aún: `geometry`. Esta columna tiene la información de una serie de puntos que trazan un **polígono**. En otras palabras, contiene la forma de cada provincia Por esto esta variable será fundamental para realizar mapas en R, es el insumo básico de donde el programa saca la información para trazarlos. 
 
 A partir de esto, graficar un mapa es tan simple como usar dos líneas de ggplot con la geometría `geom_sf`. 
-
-Por una cuestión de memoria RAM de la computadora, vamos a restringir el análisis a los departamentos de PBA. 
-
 
 ```{r}
 ggplot(pba_geo)+
@@ -87,13 +83,11 @@ ggplot(pba_geo)+
 Con frecuencia vemos información presentada en mapas. Un ejemplo de ellos es el [mapa del delito](https://mapa.seguridadciudad.gob.ar/) de CABA, otro es el [mapa de accesibilidad](https://acceso.shinyapps.io/mapa/) de factor~data.  Detengámonos un segundo a ver, ¿cuáles son las propiedades estéticas utilizadas para mostrar la información?
 
 La forma más común de mostrar información geográfica es a través de **mapas coropléticos**, donde se colorean regiones individualmente de acuerdo a la dimensión de la información que se quiere mostrar. Para hacerlo, nada más hay que asignarle al atributo `fill`la dimensión que queremos plasmar. 
-
-Vamos a agregarle capas de información a nuestro mapa. Por ejemplo, supongamos que queremos ver en el mapa qué provincias tuvieron una mayor cantidad de casos en el año 2020. Primero vamos a hacer el `group_by`: 
-
-Ahora vamos a hacer distintas operaciones para que las provincias estén escritas en el mismo formato y sea posible joinear los dos dataframes:
+Vamos a agregarle capas de información a nuestro mapa. Por ejemplo, supongamos que queremos ver en el mapa qué departamentos tuvieron una mayor cantidad de homicidios dolosos en el año 2020. Para esto podemos usar la base de datos con la que estuvimos trabajando las últimas clases. Vamos a filtrarla e importar los casos que nos interesan.
 
 ```{r}
 df <- readxl::read_xlsx("data/Integrado_HD_base_usuaria_2017-2020.xlsx")
+
 #Formato
 pba <- df %>% filter(provincia == "BUENOS AIRES") 
 
@@ -109,14 +103,14 @@ Luego, joineamos las dos bases. Una cosa **muy importante** es que siempre hay q
 pba_geo <- pba_geo %>% left_join(pba, by=c("in1"="Cod_INDEC"))
 ```
 
-Por una cuestión de memoria de la computadora, y para que no nos crashee todo el programa, vamos a trabajar únicamente con datos de 2020 de la región pampeana (Buenos Aires, Santa Fe, Córdoba, La Pampa y San Luis)
+Ahora podemos hacer lo que ya sabemos: agrupar y contar los casos por `Id_hecho`.
 
 ```{r}
 tb1 <- pba_geo%>%
         group_by(anio, nam)%>%
         summarise(n=n_distinct(Id_hecho, na.rm = TRUE)) 
-
 ```
+Como estamos trabajando el gráfico con `ggplot`, podemos pasarle el atributo estético `n` al parámetro `fill` para que los polígonos se pinten según la frecuencia de casos.
 
 ```{r}
 ggplot(tb1, aes(fill=n))+
@@ -131,7 +125,9 @@ ggplot(tb1)+
         geom_sf(aes(fill = n), color = NA)
 ```
 
-Hasta acá está todo bien, pero 
+En este mapa, La Matanza destaca como el departamento con mayor cantidad de homicidios en 2020. Sin embargo, algo que no hemos mencionado aún es la importancia de "normalizar" las variables antes de mostrarlas en un mapa. En general, los lugares más grandes van a contener dentro "más" de cualquier variable que los lugares pequeños (sean personas, comercios o accidentes). En este sentido, es de esperar que La Matanza registre más incidentes que los demás departamentos ya que de acuerdo con las proyecciones poblacionales del último censo tiene 2.281.194 de habitantes. Lo que sería más útil aquí es presentar la relación entre homicidios y la cantidad de habitantes. 
+
+Por eso vamos a incorporar un dataframe que nos de adicional: las proyecciones poblacionales por departamento de 2020.
 
 ```{r}
 proyecciones <- readxl::read_excel("data/proy_pba.xls")
@@ -142,9 +138,7 @@ pba_geo <- pba_geo %>%
         left_join(proyecciones, by = c("nam" = "Partido"))
 ```
 
-Algo importante que no hemos mencionado aún es la importancia de "normalizar" las variables antes de mostrarlas en un mapa. En general, los lugares más grandes van a contener dentro "más" de cualquier variable que los lugares pequeños (sean personas, comercios o accidentes). Es de esperarse que en el barrio más pequeño de la ciudad vivan menos personas que en el más grande; lo que es útil saber es si los valores son bajo o altos para un área _con esa extensión_. Ejemplos típicos: 
-
-* En lugar de mostrar "número de crímenes por barrio" es más instructivo mostrar el número de crímenes per cápita; de lo contrario es de esperar que los lugares más poblados siempre registren más incidentes, lo cual no agrega demasiada información.  
+Ahora sí, vamos a agrupar por año, departamento y tamaño de la población. Luego, vamos a hacer una columna que sea los habitantes en miles. 
 
 ```{r}
 tb2 <- pba_geo%>%
@@ -153,13 +147,14 @@ tb2 <- pba_geo%>%
 
 tb2 <- tb2 %>% mutate(hab1000 = Proyecciones_2020/1000)
 ```
+Y lo vamos a graficar. 
 
 ```{r}
 ggplot(tb2)+
         geom_sf(aes(fill = n/hab1000), color = NA)
 ```
 
-Este último gráfico representa de forma mucho mas precisa la distribución de habitantes en la ciudad, haciendo saltar a la vista los núcleos con mayor densidad de población. Pero tenemos una mejora más por realizar: elegir una escala de color que haga más legible el gráfico, ayudando al ojo a diferenciar las áreas donde la densidad es particularmente alta o baja. Apelamos a ["viridis"](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html), una escala diseñada para ser fácil de interpretar... y lucir bien de paso. Para usar virids, agregamos `scale_fill_viridis_d()` cuando se muestra una variable categórica, y `scale_fill_viridis_c() `cuando se trata de una variable continua, nuestro caso en este momento.
+Este último gráfico representa de forma mucho mas precisa la distribución homicidios dolosos por habitante en la provincia. Pero tenemos una mejora más por realizar: elegir una escala de color que haga más legible el gráfico, ayudando al ojo a diferenciar las áreas donde la densidad es particularmente alta o baja. Apelamos a ["viridis"](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html), una escala diseñada para ser fácil de interpretar... y lucir bien de paso. Para usar virids, agregamos `scale_fill_viridis_d()` cuando se muestra una variable categórica, y `scale_fill_viridis_c() `cuando se trata de una variable continua, nuestro caso en este momento.
 
 ```{r}
 library(viridis)
@@ -172,10 +167,28 @@ ggplot(tb2)+
              fill = "HD/1000 habitantes")+
         theme_minimal()
 ```
+Vemos que parecen otros departamentos en tonos verde agua y amarilllo que nos llaman la atención. Podemos ver que los departamentos de Pellegrini, Pinamar y Capitán Sarmiento parecen tener una cantidad relativamente más alta de homicidios que los demás departamentos.
+
+### Mapas interactivos
+
+Con la explosión de de popularidad de los mapas online, con Google Maps al frente, se ha vuelto habitual explorar información geográfica en entornos interactivos, que permiten al usuario desplazarse libremente por la superficie terrestre y cambiar el nivel de zoom con el que se muestran los datos. Mapas con información tan precisa como la posición de los delitos, que incluso permite ver a parcela donde han ocurrido, se beneficia en extremo de la posibilidad de variar la escala de visualización a voluntad.
+
+#### Leaflet
+
+Desde R es fácil proyectar nuestros datos sobre mapas interactivos, usando el paquete `leaflet`.
+
+Lo activamos con:
+
+
 ```{r}
-tb2 %>%
-        #filter(anio==2020)%>%
-        mutate(tasa = n/hab1000) %>%
-        arrange(desc(tasa))
+library(leaflet)
+
+pal <- colorNumeric("viridis", NULL)
+
+leaflet(tb2) %>% 
+    addTiles() %>% 
+    addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 0.8,
+    fillColor = ~pal(n/hab1000),
+    label = ~paste0(nam, ": ", round(n/hab1000,2)))
 ```
 

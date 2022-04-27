@@ -23,6 +23,8 @@ Para empezar el curso es necesario que primero descarguen R y RStuido. [Aquí ti
 - Importación de datos (formatos .txt, .csv, .xlsx). 
 - Escritura de archivos (formatos .txt, .csv, .xlsx, .R, .RDS). 
 
+[![](imgs/Download.png)](./clase2/clase2.zip)
+
 ### Clase 3. Tidyverse. 
 - Qué es tidyverse, uso de las pipes (%>%) 
 - Importación de bases con readr. 
@@ -30,6 +32,8 @@ Para empezar el curso es necesario que primero descarguen R y RStuido. [Aquí ti
 - Seleccionar variables, ordenar y agrupar la base de datos (select)
 - Creación de nuevas variables (mutate)
 - Aplicar filtros sobre la base de datos (filter)
+
+[![](imgs/Download.png)](./clase3/clase3.zip)
 
 ### Clase 4. Tidyverse + programación funcional
 - Construcción de medida resumen (group_by, summarise) 

@@ -2,7 +2,7 @@
 
 ### 2. Abran el .RProj de la carpeta 
 
-### 3. Importen la base de homicidios dolosos detallando la ruta desde el punto de partida del proyecto:
+### 3. Importen la base de homicidios dolosos que está en la carpeta "data" detallando la ruta desde el punto de partida del proyecto:
 ### a. En formato .dta
 ### b. En formato .xlsx
 

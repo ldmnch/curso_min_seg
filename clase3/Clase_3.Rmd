@@ -102,7 +102,7 @@ head(select_prueba_2)
 - También se puede seleccionar un intervalo de columnas, usando el `:`
 
 ```{r}
-select_prueba_3 <- df %>% select(anio, departamento, provincia, tipo_lugar:otro_motivo_origen_registro)
+select_prueba_3 <- df %>% select(tipo_lugar:otro_motivo_origen_registro)
 
 head(select_prueba_3)
 ```
