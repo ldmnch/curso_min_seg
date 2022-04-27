@@ -41,3 +41,5 @@ Para empezar el curso es necesario que primero descarguen R y RStuido. [Aquí ti
 - “Pivots” de la base (pivot_longer, pivot_wider)
 - Trabajo con formatos de fecha (lubridate). 
 - Programación funcional (if else, loops). 
+
+[![](imgs/Download.png)](./clase4/clase4.zip)

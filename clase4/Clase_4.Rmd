@@ -109,7 +109,7 @@ head(geo)
 ```
 
 ```{r}
-df_merged <- df %>% left_join(geo, by = c("Cod_INDEC_Prov" = "codpcia", "codigo_departamento" = "coddpto")) 
+df_merged <- geo %>% left_join(df, by = c("codpcia" = "Cod_INDEC_Prov", "coddpto" = "codigo_departamento")) 
 
 colnames(df_merged)
 ```

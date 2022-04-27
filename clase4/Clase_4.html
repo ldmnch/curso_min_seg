@@ -246,7 +246,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Clase 4</h1>
 <h4 class="author">Domenech Burin, Laia</h4>
-<h4 class="date">04 abril, 2022</h4>
+<h4 class="date">27 abril, 2022</h4>
 
 </div>
 
@@ -403,32 +403,32 @@ head(geo)</code></pre>
 ## 4 06      007     (3745278 5866646)
 ## 5 06      007     (3815560 5859954)
 ## 6 06      007     (3742758 5851484)</code></pre>
-<pre class="r"><code>df_merged &lt;- df %&gt;%
-    left_join(geo, by = c(Cod_INDEC_Prov = &quot;codpcia&quot;, codigo_departamento = &quot;coddpto&quot;))
+<pre class="r"><code>df_merged &lt;- geo %&gt;%
+    left_join(df, by = c(codpcia = &quot;Cod_INDEC_Prov&quot;, coddpto = &quot;codigo_departamento&quot;))
 
 colnames(df_merged)</code></pre>
-<pre><code>##  [1] &quot;Id_hecho&quot;                         &quot;federal&quot;                         
-##  [3] &quot;Cod_INDEC_Prov&quot;                   &quot;provincia&quot;                       
-##  [5] &quot;codigo_departamento&quot;              &quot;Cod_INDEC&quot;                       
-##  [7] &quot;departamento&quot;                     &quot;anio&quot;                            
-##  [9] &quot;mes&quot;                              &quot;radio_censal&quot;                    
-## [11] &quot;tipo_lugar&quot;                       &quot;otro_tipo_lugar&quot;                 
-## [13] &quot;clase_arma&quot;                       &quot;otro_clase_arma&quot;                 
-## [15] &quot;en_ocasion_otro_delito&quot;           &quot;otro_en_ocasion_otro_delito&quot;     
-## [17] &quot;motivo_origen_registro&quot;           &quot;otro_motivo_origen_registro&quot;     
-## [19] &quot;fecha_hecho&quot;                      &quot;hora_hecho&quot;                      
-## [21] &quot;tipo_persona_id&quot;                  &quot;tipo_persona&quot;                    
-## [23] &quot;sexo_victima&quot;                     &quot;identidad_genero_victima&quot;        
-## [25] &quot;tr_edad_victima&quot;                  &quot;clase_victima&quot;                   
-## [27] &quot;otro_clase_victima&quot;               &quot;situacion_ocupacional_victima&quot;   
-## [29] &quot;otro_situacion_ocupacional_victi&quot; &quot;otro_identidad_genero_victima&quot;   
-## [31] &quot;sexo_inculpado&quot;                   &quot;identidad_genero_inculpado&quot;      
-## [33] &quot;otro_identidad_genero_inculpado&quot;  &quot;tr_edad_inculpado&quot;               
-## [35] &quot;clase_inculpado&quot;                  &quot;otro_clase_inculpado&quot;            
-## [37] &quot;relacion_inculpado_victima&quot;       &quot;relacion_victima_inculpado&quot;      
-## [39] &quot;tipo_hecho_segun_victima&quot;         &quot;observaciones&quot;                   
-## [41] &quot;cant_inc&quot;                         &quot;cant_vic&quot;                        
-## [43] &quot;geometry&quot;</code></pre>
+<pre><code>##  [1] &quot;codpcia&quot;                          &quot;coddpto&quot;                         
+##  [3] &quot;geometry&quot;                         &quot;Id_hecho&quot;                        
+##  [5] &quot;federal&quot;                          &quot;provincia&quot;                       
+##  [7] &quot;Cod_INDEC&quot;                        &quot;departamento&quot;                    
+##  [9] &quot;anio&quot;                             &quot;mes&quot;                             
+## [11] &quot;radio_censal&quot;                     &quot;tipo_lugar&quot;                      
+## [13] &quot;otro_tipo_lugar&quot;                  &quot;clase_arma&quot;                      
+## [15] &quot;otro_clase_arma&quot;                  &quot;en_ocasion_otro_delito&quot;          
+## [17] &quot;otro_en_ocasion_otro_delito&quot;      &quot;motivo_origen_registro&quot;          
+## [19] &quot;otro_motivo_origen_registro&quot;      &quot;fecha_hecho&quot;                     
+## [21] &quot;hora_hecho&quot;                       &quot;tipo_persona_id&quot;                 
+## [23] &quot;tipo_persona&quot;                     &quot;sexo_victima&quot;                    
+## [25] &quot;identidad_genero_victima&quot;         &quot;tr_edad_victima&quot;                 
+## [27] &quot;clase_victima&quot;                    &quot;otro_clase_victima&quot;              
+## [29] &quot;situacion_ocupacional_victima&quot;    &quot;otro_situacion_ocupacional_victi&quot;
+## [31] &quot;otro_identidad_genero_victima&quot;    &quot;sexo_inculpado&quot;                  
+## [33] &quot;identidad_genero_inculpado&quot;       &quot;otro_identidad_genero_inculpado&quot; 
+## [35] &quot;tr_edad_inculpado&quot;                &quot;clase_inculpado&quot;                 
+## [37] &quot;otro_clase_inculpado&quot;             &quot;relacion_inculpado_victima&quot;      
+## [39] &quot;relacion_victima_inculpado&quot;       &quot;tipo_hecho_segun_victima&quot;        
+## [41] &quot;observaciones&quot;                    &quot;cant_inc&quot;                        
+## [43] &quot;cant_vic&quot;</code></pre>
 </div>
 <div id="fechas" class="section level2">
 <h2>Fechas</h2>
@@ -553,7 +553,7 @@ ultima.actualiz.base</code></pre>
 } else {
     Sys.Date() - ultima.actualiz.base
 }</code></pre>
-<pre><code>## [1] &quot;-4404291-03-11&quot;</code></pre>
+<pre><code>## [1] &quot;-4404291-04-03&quot;</code></pre>
 </div>
 <div id="loops" class="section level3">
 <h3>loops</h3>
