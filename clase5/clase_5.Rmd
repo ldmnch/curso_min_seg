@@ -96,11 +96,13 @@ df %>% group_by(anio, clase_arma)%>%
 
 ```
 
-Vamos a hacer el gráfico de frecuencia de casos anuales pero introduciendo también la variable provincia. Repitamos el primer gráfico que hicimos pero asignándole al atributo `fill` la variable provincia, y el valor `fill` al atributo `position` dentro de la geometría. 
+Vamos a hacer el gráfico de frecuencia de casos anuales pero introduciendo también la variable provincia. Repitamos el primer gráfico que hicimos pero con algunos cambios. Vamos a usar geom_col para indicar que hacemos un gráfico de barras con un eje `y` definido por nosotros, asignándole al atributo `fill` la variable provincia, y el valor `fill` al atributo `position` dentro de la geometría. 
 
 ```{r}
-ggplot(df, aes(x=anio, fill = provincia))+
-        geom_bar(position = "fill")
+df %>% group_by(anio, provincia)%>%
+        summarise(n=n_distinct(Id_hecho)) %>%
+        ggplot(aes(x=anio, y = n, fill = provincia))+
+        geom_col(position = "fill")
 ```
 
 `position = "fill"` indica que queremos que las categorías de la variable llenen la barra en una proporción de 0 a 1. Los otros dos valores que puede adoptar este argumento son `"stack"` o `"dodge"`. Prueben hacer el mismo gráfico cambiando esos valores a ver qué sucede.
@@ -113,8 +115,10 @@ ggplot(df, aes(x=anio, fill = provincia))+
 ```{r}
 library(viridis)
 
-ggplot(df, aes(x=anio, fill = provincia))+
-        geom_bar(position = "fill")+
+df %>% group_by(anio, provincia)%>%
+        summarise(n=n_distinct(Id_hecho)) %>%
+        ggplot(aes(x=anio, y = n, fill = provincia))+
+        geom_col(position = "fill")+
         scale_fill_viridis_d(option="magma")
 ```
 
@@ -122,11 +126,13 @@ Otra cosa que podemos hacer es asignar los colores manualmente. R viene con [var
 
 ```{r}
 colores <- c("Femenino" = 'forestgreen', "Masculino" = 'darkorchid2')
+
 df %>% filter(sexo_inculpado %in% c("Femenino", "Masculino"))%>%
         ggplot(aes(x=anio, fill = sexo_inculpado))+
         geom_bar(position = "dodge")+
         scale_fill_manual(values = colores)
 ```
+
 ### Tamaños y dimensiones 
 
 Hasta ahora estuvimos trabajando con el atributo estético de los colores y gráficos de barras. Pero estos gráficos no son tan útiles cuando queremos ver la relación que hay entre dos variables numéricas o más. En este caso son útiles los los gráficos de dispersión, o _scatterplots_. Consisten en puntos proyectados en un eje de coordenadas, donde cada punto representa una observación. 
@@ -134,9 +140,9 @@ Hasta ahora estuvimos trabajando con el atributo estético de los colores y grá
 Pongamos un caso concreto: queremos ver la relación entre los casos según año, provincia y cantidad de víctimas. Primero vamos a hacer una operación con group by para obtener la data que nos interesa. 
 
 ```{r}
-vict_prov_anio <- df %>% group_by(Id_hecho, anio, provincia) %>%
-        summarise(n=n(),
-                  tot_vic = sum(cant_vic))%>%
+vict_prov_anio <- df %>% group_by(anio, provincia) %>%
+        summarise(n = n_distinct(Id_hecho), #Cuento la cantidad de Id_hechos 
+                  tot_vic = sum(cant_vic))%>% #Cuento la cantidad de víctimas
         ungroup()%>%
         mutate(tasa_vic = tot_vic/n) 
 
@@ -165,6 +171,8 @@ ggplot(vict_prov_anio, aes(x = anio, y = n, color = provincia, size = tasa_vic))
         scale_y_log10()+
         scale_color_viridis_d(option = "inferno")
 ```
+
+Podemos destacar que Santa Cruz tuvo la tasa más alta de víctimas por caso en el año 2020.
 
 ### Cambiando el "tema"
 
