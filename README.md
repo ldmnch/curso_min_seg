@@ -43,3 +43,10 @@ Para empezar el curso es necesario que primero descarguen R y RStuido. [Aquí ti
 - Programación funcional (if else, loops). 
 
 [![](imgs/Download.png)](./clase4/clase4.zip)
+
+### Clase 5. Visualización. 
+- Introducción a ggplot.  
+- Gráficos de línea, barras, boxplots y distribuciones de densidad. 
+- Parámetros de los gráficos: Leyendas, ejes, títulos, notas, colores, escala
+
+[![](imgs/Download.png)](./clase5/clase5.zip)
