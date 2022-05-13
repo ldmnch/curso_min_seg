@@ -215,6 +215,11 @@ df <- df %>% mutate(columna_ejemplo = "Registro de homicidios dolosos 2017-2020"
 table(df$columna_ejemplo)
 ```
 
+```{r}
+df
+```
+
+
 Pero también podemos hacer algo más util. Por ejemplo, si echamos un vistazo a la información de la provincia vemos que estos valores están todos en mayúscula:
 
 ```{r}
