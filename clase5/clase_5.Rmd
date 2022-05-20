@@ -32,6 +32,14 @@ Vamos a trabajar con la base de homicidios dolosos:
 
 ```{r}
 df <- readxl::read_xlsx("data/Integrado_HD_base_usuaria_2017-2020.xlsx")
+
+df <- df %>% mutate(region = case_when(
+        provincia %in% c("CORRIENTES", "CHACO", "MISIONES", "FORMOSA") ~ "NEA",
+        provincia %in% c("TUCUMÁN", "JUJUY","SALTA", "CATAMARCA", "SANTIAGO DEL ESTERO", "LA RIOJA") ~ "NOA",
+        provincia %in% c("SAN LUIS", "MENDOZA", "SAN JUAN") ~ "Cuyo",
+        provincia %in% c("SANTA FE", "CORDOBA", "BUENOS AIRES", "CIUDAD DE BUENOS AIRES", "ENTRE RIOS") ~ "Pampeana",
+        provincia %in% c("LA PAMPA", "NEUQUEN", "RIO NEGRO", "CHUBUT", "SANTA CRUZ", "TIERRA DEL FUEGO") ~ "Patagonica"
+))
 ```
 
 ## Uso de ggplot
@@ -73,6 +81,7 @@ df %>% group_by(anio, Id_hecho)%>%
         ggplot(aes(x=anio, y=total_vict))+
         geom_line()
 ```
+
 Combinando con tidyverse también podemos hacer gráficos de frecuencias relativas. Vamos a usar `group_by` para obtener los porcentajes y le vamos a pasar la variable `anio` al eje x, `perc` al eje y y la geometría `geom_col()`, que crea un gráfico de barras al cual se le puede pasar un valor al argumento y. 
 
 ```{r}
@@ -96,18 +105,37 @@ df %>% group_by(anio, clase_arma)%>%
 
 ```
 
-Vamos a hacer el gráfico de frecuencia de casos anuales pero introduciendo también la variable provincia. Repitamos el primer gráfico que hicimos pero con algunos cambios. Vamos a usar geom_col para indicar que hacemos un gráfico de barras con un eje `y` definido por nosotros, asignándole al atributo `fill` la variable provincia, y el valor `fill` al atributo `position` dentro de la geometría. 
+Ahora bien, también podemos usar los colores para representar proporciones y cantidades por grupo. Para eso usamos el atributo `fill` en la mayoría de nuestros gráficos. Por ejemplo, vamos a hacer el gráfico de frecuencia de casos anuales pero con la proporción de provincias. Repetimos el primer gráfico que hicimos pero con algunos cambios. Vamos a usar geom_col, asignándole al atributo `fill` la variable provincia, y el valor `fill` al atributo `position` dentro de la geometría. 
 
 ```{r}
-df %>% group_by(anio, provincia)%>%
+df %>% group_by(anio, region)%>%
         summarise(n=n_distinct(Id_hecho)) %>%
-        ggplot(aes(x=anio, y = n, fill = provincia))+
+        ggplot(aes(x=anio, y = n, fill = region))+
         geom_col(position = "fill")
 ```
 
-`position = "fill"` indica que queremos que las categorías de la variable llenen la barra en una proporción de 0 a 1. Los otros dos valores que puede adoptar este argumento son `"stack"` o `"dodge"`. Prueben hacer el mismo gráfico cambiando esos valores a ver qué sucede.
+`position = "fill"` indica que queremos que las categorías de la variable llenen la barra en una proporción de 0 a 1. Los otros dos valores que puede adoptar este argumento son `"stack"` o `"dodge"`. 
 
-```{r, eval = FALSE}
+Para escapar un poco de las barras, también podría mostrar los resultados en un gráfico de densidad. Lo que muestran es la distribución de probabilidad de la variable, es decir que tan probable es encontrar un valor determinado si tomaramos al azar una de las observaciones. Para esto, tenemos que pasarle al atributo `x` la variable de interés y agregar la geometría `geom_density()`. Probémoslo.
+
+```{r}
+df %>% 
+        ggplot(aes(x=anio))+
+        geom_density()
+```
+Las ventajas de un gráfico de densidad se ponen de relieve a la hora de comparar los resultados según categorías interenas de la data. Por ejemplo, is queremos mostrar las distintas distribuciones de cantidad de inculpados por provincia, usamos el atributo estético "fill" al igual que con los gráficos de barras. Sería así:
+
+```{r}
+df %>% 
+        ggplot(aes(x=anio, fill = region))+
+        geom_density()
+```
+Salta a la vista el caso de Formosa, que tiene 16 inculpados en un caso. Para revelar cualquier “sorpresa” que pudiera haber quedado oculta en las distribuciones tapadas por otras, ajustamos el atributo de `alpha`, que por cierto puede usarse con cualquier geometría de ggplot para controlar su grado de transparencia. Intentemos asignando una transparencia del 50% con `alpha = 0.5`:
+
+```{r}
+df %>% 
+        ggplot(aes(x=anio, fill = region))+
+        geom_density(alpha=0.5)
 ```
 
 `ggplot` automáticamente asigna una paleta de colores predeterminada. Sin embargo, podemos instalar paquetes que introducen una gama de paletas nuevas, generalmente mejores que las que tiene R. Por ejemplo `viridis` trae paletas que, además de ser lindas, están diseñadas para poder imprimirse en escala de grises y ser interpretadas por personas con daltonismo. Probemos usar una paleta de este paquete en nuestro gráfico de arriba. Primero vamos a importar la librería `viridis`, y vamos a agregarle al código anterior la capa `scale_fill_viridis_d`, con el valor `magma` en el atributo `option`. 
@@ -115,11 +143,10 @@ df %>% group_by(anio, provincia)%>%
 ```{r}
 library(viridis)
 
-df %>% group_by(anio, provincia)%>%
-        summarise(n=n_distinct(Id_hecho)) %>%
-        ggplot(aes(x=anio, y = n, fill = provincia))+
-        geom_col(position = "fill")+
-        scale_fill_viridis_d(option="magma")
+df %>% 
+        ggplot(aes(x=anio, fill = region))+
+        geom_density(alpha=0.5)+
+        scale_fill_viridis_d()
 ```
 
 Otra cosa que podemos hacer es asignar los colores manualmente. R viene con [varios colores que podemos llamar por su nombre en inglés](http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf), pero si queremos colores que no están disponibles en esta paleta podemos usar hex codes. Vamos a probarlo haciendo un gráfico de barras de la variable `sexo_inculpado`, filtrando únicamente según sexo femenino o masculino. 
@@ -140,7 +167,7 @@ Hasta ahora estuvimos trabajando con el atributo estético de los colores y grá
 Pongamos un caso concreto: queremos ver la relación entre los casos según año, provincia y cantidad de víctimas. Primero vamos a hacer una operación con group by para obtener la data que nos interesa. 
 
 ```{r}
-vict_prov_anio <- df %>% group_by(anio, provincia) %>%
+vict_prov_anio <- df %>% group_by(anio, region) %>%
         summarise(n = n_distinct(Id_hecho), #Cuento la cantidad de Id_hechos 
                   tot_vic = sum(cant_vic))%>% #Cuento la cantidad de víctimas
         ungroup()%>%
@@ -152,27 +179,25 @@ head(vict_prov_anio)
 Vamos a graficar las tres variables que nos interesan en un **scatterplot** asignando `anio` al eje x, `n` al eje y, `provincia` al atributo `color` y `tasa_vic` al atributo `size`. 
 
 ```{r}
-ggplot(vict_prov_anio, aes(x = anio, y = n, color = provincia, size = tasa_vic))+
+ggplot(vict_prov_anio, aes(x = anio, y = n, color = region, size = tasa_vic))+
         geom_point()+
         scale_color_viridis_d(option = "inferno")
 ```
 
 Podemos ver que este gráfico tiene por lo menos un problema que dificulta su lectura. Uno de los más notorios es que existen grandes disparidades en el n de casos: Buenos Aires tiene más de 1500 casos en todos los años, mientras que el resto de las provincias tienen por debajo de 1000. 
 
-Hmmm... ¡no se ve muy parecido!. Lo que ocurre es que Rosling utiliza un truco : usa una escala logarítmica. Si revisamos la imagen de Rosling presentando que aparece más arriba, vemos que en el eje de las $y$ la escala salta de 400 a 4.000, y luego a 40.000: en segmentos del mismo largo, los valores no crecen proporcionalmente sino en potencias de 10. Esto se logra tomando el logaritmo en base 10 de los datos antes de proyectarlos, con lo cual lo que estamos mostrando es 4 x 10^1^, 4 x 10^2^, 4 x 10^3^, etc. 
-¿Para que sirve esto? Para visualizar datos en los que existen grandes disparidades en una variable, porque permite que los valores pequeños tengan espacio para diferenciarse, y a la vez que los muy grandes no aparezcan tan alejados, logrando un gráfico más compacto y en general más legible. Cuando hay dinero involucrado, suele ser necesario invocar a la escala logarítmica para mejorar la legibilidad... ¡las grandes disparidades abundan! 
+En estas situaciones, es útil usar una escala logarítmica para presentar los datos. Esto va a hacer que los valores de un eje no crezcan de manera proporcional, sino en potencias de diez. ¿Para que sirve esto? Para visualizar datos en los que existen grandes disparidades en una variable, porque permite que los valores pequeños tengan espacio para diferenciarse, y a la vez que los muy grandes no aparezcan tan alejados, logrando un gráfico más compacto y en general más legible. 
 
 En todo caso, `ggplot2` incluye varias funciones para transformar las escala de las $x$ o de las $y$, entre ellas las que pasan las variables a escala logarítmica de base 10: `scale_x_log10()` y `scale_x_log10()`. ¿Cual usaríamos aquí?
 
 
 ```{r}
-ggplot(vict_prov_anio, aes(x = anio, y = n, color = provincia, size = tasa_vic))+
+ggplot(vict_prov_anio, aes(x = anio, y = n, color = region, size = tasa_vic))+
         geom_point()+
         scale_y_log10()+
         scale_color_viridis_d(option = "inferno")
 ```
 
-Podemos destacar que Santa Cruz tuvo la tasa más alta de víctimas por caso en el año 2020.
 
 ### Cambiando el "tema"
 
@@ -200,29 +225,55 @@ df %>% filter(sexo_inculpado %in% c("Femenino", "Masculino"))%>%
         theme_minimal()
 ```
 
+## Otras formas de ver comparaciones 
+
+Hasta ahora vimos que podemos ver comparaciones en un gráfico mediante colores o representación en ejes. Sin embargo, también podemos mostrar las categorías en distintos paneles. Esto lo hacemos con `facet_wrap`.  Por ejemplo, veamos cómo se distribuyen los lugares de homicidio por región a lo largo de los años. 
+
+```{r}
+#Primero hacemos una tabla con la cantidad de homicidios por lugar según región y año
+region_lugar <- df %>% group_by(anio, region, tipo_lugar) %>% 
+                        summarise(n=n_distinct(Id_hecho))
+```
+El total lo veríamos de la siguiente manera:
+
+```{r}
+ggplot(region_lugar, aes(x=region, y=n, fill=tipo_lugar))+
+        geom_col(position = 'dodge')
+```
+
+Ahora, si quisiéramos verlo en paneles, nada más tenemos que agregar `facet_wrap()` y adentro le pasamos `.~` seguido de la variable de control. 
+
+```{r}
+ggplot(region_lugar, aes(x=region, y=n, fill=tipo_lugar))+
+        geom_col(position = 'dodge')+
+        facet_wrap(.~anio)
+```
 
 ## Otros atributos estéticos
 
 `coord_flip()` y `theme(axis.text.x = element_text(angle = 90))` son atributos útiles para utilizar cuando las categorías del eje x son muy largas y se superponen. Por ejemplo, hagamos un gráfico de barras de la cantidad de casos totales por provincia.  
 
 ```{r}
-ggplot(df, aes(x=provincia))+
-        geom_bar()
+casos_prov <- df %>% group_by(provincia)%>%
+        summarise(n=n_distinct(Id_hecho))
+
+ggplot(casos_prov, aes(x=provincia, y=n))+
+        geom_col()
 ```
 
 No se ve nada bien. Ahora, probemos el mismo gráfico con `coord_flip()`.
 
 ```{r}
-ggplot(df, aes(x=provincia))+
-        geom_bar()+
+ggplot(casos_prov, aes(x=provincia, y=n))+
+        geom_col()+
         coord_flip()
 ```
 
 Y con la rotación de texto. 
 
 ```{r}
-ggplot(df, aes(x=provincia))+
-        geom_bar()+
+ggplot(casos_prov, aes(x=provincia, y=n))+
+        geom_col()+
         theme(axis.text.x = element_text(angle = 90))
 ```
 
@@ -247,8 +298,8 @@ y ya que estamos, dos opcionales:
 Todo ello puede resolverse con la misma función: `labs()`. Esta se encarga de definir título y subtítulo, nombres de ejes y de leyendas, y nota al pie si hiciera falta.
 
 ```{r}
-ggplot(df, aes(x=provincia))+
-        geom_bar()+
+ggplot(casos_prov, aes(x=provincia, y=n))+
+        geom_col()+
         coord_flip()+
         labs(
         title = "Homcidios dolosos registrados por provincia",
@@ -257,5 +308,21 @@ ggplot(df, aes(x=provincia))+
         x = "Provincia",
         y = "n"
         )
+```
+
+Y para terminar, para que quede todo más organizado, podríamos ordenar las barras en orden descendente. 
+
+```{r}
+ggplot(casos_prov, aes(x=reorder(provincia, n), y=n))+
+        geom_col()+
+        coord_flip()+
+        labs(
+        title = "Homcidios dolosos registrados por provincia",
+        subtitle = "2017-2020",
+        caption = "Fuente: Ministerio de Seguridad de la Nación",
+        x = "Provincia",
+        y = "n"
+        )
+
 ```
 

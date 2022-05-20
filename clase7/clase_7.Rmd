@@ -1,0 +1,101 @@
+---
+title: "Interactividad en los gráficos"
+author: "Laia Domenech Burin"
+author: "Domenech Burin, Laia"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+theme: Boadilla
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, collapse=TRUE, highlight=TRUE, paged.print=FALSE, prompt=TRUE, strip.white=FALSE)
+```
+
+### Interactividad en R 
+
+Además de las funciones incluidas en el lenguaje, y de la "gramática" para realizar todo tipo de gráficos que ofrece `ggplot2`, podemos agregar a nuestro repertorio paquetes adicionales que realizan visualizaciones específicas. En la vertiente de interactividad, son notables los paquetes reunidos bajo el nombre de [htmlwidgets](http://gallery.htmlwidgets.org/), que generan visualizaciones dinámicas con una gran variedad de estilos y recursos.
+
+La particularidad de los *htmlwidgets* es que traen a `R` excelentes funciones de visualización desarrolladas en `JavaScript`. El gran fuerte de `JavaScript` es la generación de contenido interactivo para sitios web. Los paquetes reunidos en la colección *htmlwidgets* "envuelven" el código `Javascript` en instrucciones en `R`, haciendo un puente entre los dos mundos, y permitiendo generar desde `R` visualizaciones que pueden publicarse como contenido web. Para nuestros fines, vamos a concentrarnos en dos de las opciones en particular:[`leaflet`](https://rstudio.github.io/leaflet/) para mapas interactivos y [`Plotly`](https://plotly.com/r/) para convertir nuestros gráficos realizados en `ggplot2` a versiones interactivas. 
+
+#### Mapas interactivos
+
+Con la explosión de de popularidad de los mapas online, con Google Maps al frente, se ha vuelto habitual explorar información geográfica en entornos interactivos, que permiten al usuario desplazarse libremente por la superficie terrestre y cambiar el nivel de zoom con el que se muestran los datos. Mapas con información tan precisa como la posición de los delitos, que incluso permite ver a parcela donde han ocurrido, se beneficia en extremo de la posibilidad de variar la escala de visualización a voluntad.
+
+Desde R es fácil proyectar nuestros datos sobre mapas interactivos, usando el paquete `leaflet`.
+
+Lo activamos con:
+
+```{r}
+library(leaflet)
+```
+
+El uso de `leaflet` es similar al de `ggplot`; uno toma un dataframe y lo muestra mediante capas que exponen distintos aspectos de la información. Para comenzar, usemos `leaflet(tb2)`
+
+```{r}
+leaflet(tb2)
+```
+
+... y no obtuvimos mucho. Tal como pasa con `ggplot()`, si uno no define ninguna capa de visualización, el resultado es una especie de lienzo vacío.
+
+Siguiente paso: agregar un mapa base, agregando al código la función `addTiles()`. Para sumar capas a un mapa de `leaflet` usamos " %\>% " en lugar del " + " que requiere `ggplot()`, pero el concepto es el mismo.
+
+```{r}
+leaflet(tb2)%>%
+        addTiles()
+```
+
+Hasta acá, tenemos un mapa del mundo pero sin nuestros polígonos. Para ello los vamos a agregar con la función `addPolygons`. 
+
+`leaflet` no nos permite identificar regiones en un mapa por color automáticamente, sino que requiere que creemos por nuestra cuenta una paleta de colores para aplicar a nuestros datos. suerte contamos con funciones auxiliares que nos permiten crear paletas a medida, dependiendo del tipo de datos que vamos a mostrar: `colorFactor()` para variables categóricas, `colorNumeric()` para variables numéricas, o `colorQuantile()` también para variables numéricas, pero agrupadas en cuantiles. Cualquiera de las opciones requiere al menos dos parámetros. Uno es “palette”, para definir los tonos a usar (aquí funcionan nuestros amigos viridis, magma, plasma e inferno, y también las paletas Brewer, como Set1 , Spectral o Accent). El parámetro restante es “domain”, que simplemente toma un vector con los datos que vamos a representar con la paleta. En este caso, le vamos a pasar `NULL` ya que los datos se los vamos a asignar en el mismo gráfico. 
+
+```{r}
+pal <- colorNumeric("viridis", NULL)
+```
+
+Ahora, vamos a agregarle los polígonos y agregar algunos parámetros para rellenar los polígonos y que queden bien. `fillColor = ~pal(n/Proyecciones_2020)` indica el relleno. Con `stroke = FALSE` borramos las líneas que separan los polígonos, con `smoothFactor = 0.3` suavizamos los bordes, con `fillOpacity = 0.8` transparentamos un poco el relleno. Por último, con `label = ~paste0(nam, ": ", round(n/Proyecciones_2020,2))` vamos a agregar una etiqueta que diga el valor redondeado de la relación homicidios dolosos/proyección poblacional.
+
+```{r}
+leaflet(tb2) %>% 
+    addTiles() %>% 
+    addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 0.8,
+    fillColor = ~pal(n/Proyecciones_2020),
+    label = ~paste0(nam, ": ", round(n/Proyecciones_2020,2)))
+```
+
+#### Interactividad en `ggplot`
+
+Ahora, vamos a mostrar un ejemplo de cómo implementar interactividad en gráficos de `ggplot` con el paquete `plotly`. Vamos a activarlo:
+
+```{r}
+library(plotly)
+```
+
+Ahora solo necesitamos dos cosas:
+
+- guardar el resultado de nuestra visualización en una variable, que llamaremos -por elegir algo- “p”
+- pasar la variable que contiene la visualización a la función ggplotly, que la convertirá en una versión interactiva.
+
+Y eso es todo. Vamos a intentarlo replicando el gráfico de víctimas provinciales por año que realizamos anteriormente:
+
+```{r}
+vict_prov_anio <- df %>% group_by(anio, provincia) %>%
+         summarise(n = n_distinct(Id_hecho), #Cuento la cantidad de Id_hechos 
+                   tot_vic = sum(cant_vic))%>% #Cuento la cantidad de víctimas
+         ungroup()%>%
+         mutate(tasa_vic = tot_vic/n) 
+
+p <- ggplot(vict_prov_anio, aes(x = anio, y = n, color = provincia, size = tasa_vic))+
+         geom_point()+
+         scale_y_log10()+
+         scale_color_viridis_d(option = "inferno")
+
+ggplotly(p)
+```
+

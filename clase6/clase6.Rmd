@@ -77,6 +77,8 @@ Veamos cómo está compuesto este dataframe:
 ```{r}
 head(pba_geo)
 ```
+
+
 La data contiene información básica de cada provincia. Sin embargo, van a ver tiene una columna particular, cuyo formato no habíamos visto aún: `geometry`. Esta columna tiene la información de una serie de puntos que trazan un **polígono**. En otras palabras, contiene la forma de cada provincia Por esto esta variable será fundamental para realizar mapas en R, es el insumo básico de donde el programa saca la información para trazarlos. 
 
 A partir de esto, graficar un mapa es tan simple como usar dos líneas de ggplot con la geometría `geom_sf`. 
@@ -91,6 +93,7 @@ ggplot(pba_geo)+
 Con frecuencia vemos información presentada en mapas. Un ejemplo de ellos es el [mapa del delito](https://mapa.seguridadciudad.gob.ar/) de CABA, otro es el [mapa de accesibilidad](https://acceso.shinyapps.io/mapa/) de factor~data.  Detengámonos un segundo a ver, ¿cuáles son las propiedades estéticas utilizadas para mostrar la información?
 
 La forma más común de mostrar información geográfica es a través de **mapas coropléticos**, donde se colorean regiones individualmente de acuerdo a la dimensión de la información que se quiere mostrar. Para hacerlo, nada más hay que asignarle al atributo `fill`la dimensión que queremos plasmar. 
+
 Vamos a agregarle capas de información a nuestro mapa. Por ejemplo, supongamos que queremos ver en el mapa qué departamentos tuvieron una mayor cantidad de homicidios dolosos en el año 2020. Para esto podemos usar la base de datos con la que estuvimos trabajando las últimas clases. Vamos a filtrarla e importar los casos que nos interesan.
 
 ```{r}
@@ -101,22 +104,22 @@ pba <- df %>% filter(provincia == "BUENOS AIRES")
 
 pba <- pba %>% filter(departamento != "Departamento sin determinar")
 
-pba <- pba %>% filter(anio ==2020)
+pba_2020 <- pba %>% filter(anio == 2020)
 ```
 
 Luego, joineamos las dos bases. Una cosa **muy importante** es que siempre hay que poner la base con las geometrías a la izquierda, de lo contrario la columna `geometry` pierde el formato. 
 
 ```{r}
 #Join
-pba_geo <- pba_geo %>% left_join(pba, by=c("in1"="Cod_INDEC"))
+pba_geo_2020 <- pba_geo %>% left_join(pba_2020, by=c("in1"="Cod_INDEC"))
 ```
 
 Ahora podemos hacer lo que ya sabemos: agrupar y contar los casos por `Id_hecho`.
 
 ```{r}
-tb1 <- pba_geo%>%
+tb1 <- pba_geo_2020%>%
         group_by(anio, nam)%>%
-        summarise(n=n_distinct(Id_hecho, na.rm = TRUE)) 
+        summarise(n=n_distinct(Id_hecho, na.rm = FALSE)) 
 ```
 Como estamos trabajando el gráfico con `ggplot`, podemos pasarle el atributo estético `n` al parámetro `fill` para que los polígonos se pinten según la frecuencia de casos.
 
@@ -135,21 +138,21 @@ ggplot(tb1)+
 
 En este mapa, La Matanza destaca como el departamento con mayor cantidad de homicidios en 2020. Sin embargo, algo que no hemos mencionado aún es la importancia de "normalizar" las variables antes de mostrarlas en un mapa. En general, los lugares más grandes van a contener dentro "más" de cualquier variable que los lugares pequeños (sean personas, comercios o accidentes). En este sentido, es de esperar que La Matanza registre más incidentes que los demás departamentos ya que de acuerdo con las proyecciones poblacionales del último censo tiene 2.281.194 de habitantes. Lo que sería más útil aquí es presentar la relación entre homicidios y la cantidad de habitantes. 
 
-Por eso vamos a incorporar un dataframe que nos de adicional: las proyecciones poblacionales por departamento de 2020.
+Por eso vamos a incorporar un dataframe que nos de adicional: las proyecciones poblacionales por departamento. 
 
 ```{r}
-proyecciones <- readxl::read_excel("data/proy_pba.xls")
+proyecciones <- readxl::read_excel("data/proy_1025_depto_buenos_aires.xls") %>% drop_na()
 
-proyecciones <- proyecciones %>% mutate(Proyecciones_2020 = as.numeric(Proyecciones_2020))
+proyecciones_2020 <- proyecciones %>% select(departamento, Proyecciones_2020)
 
-pba_geo <- pba_geo %>% 
-        left_join(proyecciones, by = c("nam" = "Partido"))
+pba_geo_2020 <- pba_geo_2020 %>% 
+        left_join(proyecciones_2020, by = c("nam" = "departamento"))
 ```
 
 Ahora sí, vamos a agrupar por año, departamento y tamaño de la población.
 
 ```{r}
-tb2 <- pba_geo%>%
+tb2 <- pba_geo_2020%>%
         group_by(anio, nam, Proyecciones_2020)%>%
         summarise(n=n_distinct(Id_hecho, na.rm = TRUE)) 
 ```
@@ -173,88 +176,25 @@ ggplot(tb2)+
              fill = "HD/Cant. habitantes")+
         theme_minimal()
 ```
+
+
 Vemos que parecen otros departamentos en tonos verde agua y amarilllo que nos llaman la atención. A priori podemos ver que los departamentos de Pellegrini, San Pedro, Baradero o Capitán Sarmiento parecen tener una cantidad relativamente más alta de homicidios que los demás departamentos.
 
-Sin embargo, se nos hace un poco difícil ver departamentos más pequeños -como por ejemplo los de la costa. Podríamos hacer zoom en un gráfico estático definiendo coordenadas en los límites de los ejes x e y. Pero, también podemos hacer una alternativa interactiva. 
-
-### Interactividad en R 
-
-Además de las funciones incluidas en el lenguaje, y de la "gramática" para realizar todo tipo de gráficos que ofrece `ggplot2`, podemos agregar a nuestro repertorio paquetes adicionales que realizan visualizaciones específicas. En la vertiente de interactividad, son notables los paquetes reunidos bajo el nombre de [htmlwidgets](http://gallery.htmlwidgets.org/), que generan visualizaciones dinámicas con una gran variedad de estilos y recursos.
-
-La particularidad de los *htmlwidgets* es que traen a `R` excelentes funciones de visualización desarrolladas en `JavaScript`. El gran fuerte de `JavaScript` es la generación de contenido interactivo para sitios web. Los paquetes reunidos en la colección *htmlwidgets* "envuelven" el código `Javascript` en instrucciones en `R`, haciendo un puente entre los dos mundos, y permitiendo generar desde `R` visualizaciones que pueden publicarse como contenido web. Para nuestros fines, vamos a concentrarnos en dos de las opciones en particular:[`leaflet`](https://rstudio.github.io/leaflet/) para mapas interactivos y [`Plotly`](https://plotly.com/r/) para convertir nuestros gráficos realizados en `ggplot2` a versiones interactivas. 
-
-#### Mapas interactivos
-
-Con la explosión de de popularidad de los mapas online, con Google Maps al frente, se ha vuelto habitual explorar información geográfica en entornos interactivos, que permiten al usuario desplazarse libremente por la superficie terrestre y cambiar el nivel de zoom con el que se muestran los datos. Mapas con información tan precisa como la posición de los delitos, que incluso permite ver a parcela donde han ocurrido, se beneficia en extremo de la posibilidad de variar la escala de visualización a voluntad.
-
-Desde R es fácil proyectar nuestros datos sobre mapas interactivos, usando el paquete `leaflet`.
-
-Lo activamos con:
+### Tiempo y espacio
 
 ```{r}
-library(leaflet)
-```
+pufeaf <- readxl::read_xlsx('./data/muertesviales_2017-2020.xlsx')
 
-El uso de `leaflet` es similar al de `ggplot`; uno toma un dataframe y lo muestra mediante capas que exponen distintos aspectos de la información. Para comenzar, usemos `leaflet(tb2)`
+pufeaf <-pufeaf %>% filter(provincia == "BUENOS AIRES")
 
-```{r}
-leaflet(tb2)
-```
+pufeaf <- pba_geo %>% 
+        left_join(pufeaf, by = c("nam" = "departamento"))
 
-... y no obtuvimos mucho. Tal como pasa con `ggplot()`, si uno no define ninguna capa de visualización, el resultado es una especie de lienzo vacío.
+x <- pufeaf %>% group_by(anio, nam) %>%
+        summarise(n=n_distinct(Id_hecho, na.rm=TRUE))
 
-Siguiente paso: agregar un mapa base, agregando al código la función `addTiles()`. Para sumar capas a un mapa de `leaflet` usamos " %\>% " en lugar del " + " que requiere `ggplot()`, pero el concepto es el mismo.
-
-```{r}
-leaflet(tb2)%>%
-        addTiles()
-```
-
-Hasta acá, tenemos un mapa del mundo pero sin nuestros polígonos. Para ello los vamos a agregar con la función `addPolygons`. 
-
-`leaflet` no nos permite identificar regiones en un mapa por color automáticamente, sino que requiere que creemos por nuestra cuenta una paleta de colores para aplicar a nuestros datos. suerte contamos con funciones auxiliares que nos permiten crear paletas a medida, dependiendo del tipo de datos que vamos a mostrar: `colorFactor()` para variables categóricas, `colorNumeric()` para variables numéricas, o `colorQuantile()` también para variables numéricas, pero agrupadas en cuantiles. Cualquiera de las opciones requiere al menos dos parámetros. Uno es “palette”, para definir los tonos a usar (aquí funcionan nuestros amigos viridis, magma, plasma e inferno, y también las paletas Brewer, como Set1 , Spectral o Accent). El parámetro restante es “domain”, que simplemente toma un vector con los datos que vamos a representar con la paleta. En este caso, le vamos a pasar `NULL` ya que los datos se los vamos a asignar en el mismo gráfico. 
-
-```{r}
-pal <- colorNumeric("viridis", NULL)
-```
-
-Ahora, vamos a agregarle los polígonos y agregar algunos parámetros para rellenar los polígonos y que queden bien. `fillColor = ~pal(n/Proyecciones_2020)` indica el relleno. Con `stroke = FALSE` borramos las líneas que separan los polígonos, con `smoothFactor = 0.3` suavizamos los bordes, con `fillOpacity = 0.8` transparentamos un poco el relleno. Por último, con `label = ~paste0(nam, ": ", round(n/Proyecciones_2020,2))` vamos a agregar una etiqueta que diga el valor redondeado de la relación homicidios dolosos/proyección poblacional.
-
-```{r}
-leaflet(tb2) %>% 
-    addTiles() %>% 
-    addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 0.8,
-    fillColor = ~pal(n/Proyecciones_2020),
-    label = ~paste0(nam, ": ", round(n/Proyecciones_2020,2)))
-```
-
-#### Interactividad en `ggplot`
-
-Ahora, vamos a mostrar un ejemplo de cómo implementar interactividad en gráficos de `ggplot` con el paquete `plotly`. Vamos a activarlo:
-
-```{r}
-library(plotly)
-```
-
-Ahora solo necesitamos dos cosas:
-
-- guardar el resultado de nuestra visualización en una variable, que llamaremos -por elegir algo- “p”
-- pasar la variable que contiene la visualización a la función ggplotly, que la convertirá en una versión interactiva.
-
-Y eso es todo. Vamos a intentarlo replicando el gráfico de víctimas provinciales por año que realizamos anteriormente:
-
-```{r}
-vict_prov_anio <- df %>% group_by(anio, provincia) %>%
-         summarise(n = n_distinct(Id_hecho), #Cuento la cantidad de Id_hechos 
-                   tot_vic = sum(cant_vic))%>% #Cuento la cantidad de víctimas
-         ungroup()%>%
-         mutate(tasa_vic = tot_vic/n) 
-
-p <- ggplot(vict_prov_anio, aes(x = anio, y = n, color = provincia, size = tasa_vic))+
-         geom_point()+
-         scale_y_log10()+
-         scale_color_viridis_d(option = "inferno")
-
-ggplotly(p)
+ggplot(x, aes(fill=n), color=NA)+
+        geom_sf()+
+        facet_wrap(vars(anio))
 ```
 
