@@ -65,10 +65,10 @@ tb1 <- df %>% group_by(anio)%>%
         summarise(n=n_distinct(Id_hecho))
 
 ggplot(tb1, aes(x=anio, y = n))+
-        geom_histogram(stat = 'identity')
+        geom_bar(stat = 'identity')
 ```
 
-`geom_histogram` nos permite hacer un histograma. Por default la función hace el conteo de frecuencias para la variable deseada. Como en este caso ya hicimos el conteo nosotros, le pasamos el atributo `stat = 'identity'`. `ggplot` [tiene un amplio repertorio de geometrías](https://www.maths.usyd.edu.au/u/UG/SM/STAT3022/r/current/Misc/data-visualization-2.1.pdf). ### ¿METER BOXPLOT?
+`geom_bar` es *una forma* de hacer un gráfico de barras. Por default la función hace el conteo de frecuencias para la variable deseada. Como en este caso ya hicimos el conteo nosotros, le pasamos el atributo `stat = 'identity'`. `ggplot` [tiene un amplio repertorio de geometrías](https://www.maths.usyd.edu.au/u/UG/SM/STAT3022/r/current/Misc/data-visualization-2.1.pdf).
 
 ## Combinación con gramática tidy
 
@@ -82,7 +82,7 @@ df %>% group_by(anio, Id_hecho)%>%
         geom_line()
 ```
 
-Combinando con tidyverse también podemos hacer gráficos de frecuencias relativas. Vamos a usar `group_by` para obtener los porcentajes y le vamos a pasar la variable `anio` al eje x, `perc` al eje y y la geometría `geom_col()`, que crea un gráfico de barras al cual se le puede pasar un valor al argumento y. 
+Combinando con tidyverse también podemos hacer gráficos de frecuencias relativas. Vamos a usar `group_by` para obtener los porcentajes y le vamos a pasar la variable `anio` al eje x, `perc` al eje y y la geometría `geom_col()`, también nos sirve para crear un gráfico de barras al cual se le puede pasar un valor al argumento y. 
 
 ```{r}
 df %>% group_by(anio)%>%
@@ -130,7 +130,7 @@ df %>%
         ggplot(aes(x=anio, fill = region))+
         geom_density()
 ```
-Salta a la vista el caso de Formosa, que tiene 16 inculpados en un caso. Para revelar cualquier “sorpresa” que pudiera haber quedado oculta en las distribuciones tapadas por otras, ajustamos el atributo de `alpha`, que por cierto puede usarse con cualquier geometría de ggplot para controlar su grado de transparencia. Intentemos asignando una transparencia del 50% con `alpha = 0.5`:
+Para revelar cualquier “sorpresa” que pudiera haber quedado oculta en las distribuciones tapadas por otras, ajustamos el atributo de `alpha`, que por cierto puede usarse con cualquier geometría de ggplot para controlar su grado de transparencia. Intentemos asignando una transparencia del 50% con `alpha = 0.5`:
 
 ```{r}
 df %>% 
@@ -251,29 +251,24 @@ ggplot(region_lugar, aes(x=region, y=n, fill=tipo_lugar))+
 
 ## Otros atributos estéticos
 
-`coord_flip()` y `theme(axis.text.x = element_text(angle = 90))` son atributos útiles para utilizar cuando las categorías del eje x son muy largas y se superponen. Por ejemplo, hagamos un gráfico de barras de la cantidad de casos totales por provincia.  
+`coord_flip()` y `theme(axis.text.x = element_text(angle = 90))` son atributos útiles para utilizar cuando las categorías del eje x son muy largas y se superponen. Probemos como funcionaría cada caso con el último gráfico que hicimos. 
+
+- `coord_flip()`: "flipea", o sea, da vuelta, los ejes de coordenadas. Pasa el eje x al eje y y viceversa. 
 
 ```{r}
-casos_prov <- df %>% group_by(provincia)%>%
-        summarise(n=n_distinct(Id_hecho))
-
-ggplot(casos_prov, aes(x=provincia, y=n))+
-        geom_col()
-```
-
-No se ve nada bien. Ahora, probemos el mismo gráfico con `coord_flip()`.
-
-```{r}
-ggplot(casos_prov, aes(x=provincia, y=n))+
-        geom_col()+
+ggplot(region_lugar, aes(x=region, y=n, fill=tipo_lugar))+
+        geom_col(position = 'dodge')+
+        facet_wrap(.~anio)+
         coord_flip()
 ```
 
-Y con la rotación de texto. 
+
+- `theme(axis.text.x = element_text(angle = 90))`: En cambio, lo que hace es rotar el texto en el eje que ya está. Al atributo `angle =` le vamos a pasar un valor numérico, que es los grados de rotación que queremos que tenga el texto.
 
 ```{r}
-ggplot(casos_prov, aes(x=provincia, y=n))+
-        geom_col()+
+ggplot(region_lugar, aes(x=region, y=n, fill=tipo_lugar))+
+        geom_col(position = 'dodge')+
+        facet_wrap(.~anio)+
         theme(axis.text.x = element_text(angle = 90))
 ```
 
@@ -298,31 +293,17 @@ y ya que estamos, dos opcionales:
 Todo ello puede resolverse con la misma función: `labs()`. Esta se encarga de definir título y subtítulo, nombres de ejes y de leyendas, y nota al pie si hiciera falta.
 
 ```{r}
-ggplot(casos_prov, aes(x=provincia, y=n))+
-        geom_col()+
+ggplot(region_lugar, aes(x=region, y=n, fill=tipo_lugar))+
+        geom_col(position = 'dodge')+
+        facet_wrap(.~anio)+
         coord_flip()+
         labs(
-        title = "Homcidios dolosos registrados por provincia",
+        title = "Homcidios dolosos registrados por región",
         subtitle = "2017-2020",
         caption = "Fuente: Ministerio de Seguridad de la Nación",
         x = "Provincia",
         y = "n"
-        )
-```
-
-Y para terminar, para que quede todo más organizado, podríamos ordenar las barras en orden descendente. 
-
-```{r}
-ggplot(casos_prov, aes(x=reorder(provincia, n), y=n))+
-        geom_col()+
-        coord_flip()+
-        labs(
-        title = "Homcidios dolosos registrados por provincia",
-        subtitle = "2017-2020",
-        caption = "Fuente: Ministerio de Seguridad de la Nación",
-        x = "Provincia",
-        y = "n"
-        )
-
+        )+
+        theme_minimal()
 ```
 

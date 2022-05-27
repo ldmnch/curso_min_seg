@@ -60,9 +60,10 @@ base_pufeaf <- base_pufeaf %>% mutate(Aglomerado = case_when(
 
 table(base_pufeaf$Partido_Municipio)
 
-base_pufeaf <- base_pufeaf %>% mutate(vars(Partido_Municipio),
-                       ~case_when(. == "" ~ "Sin información",
-                               TRUE ~ .)) ## REVISAR
+## Cómo modificar varias variables de una:
+base_pufeaf <- base_pufeaf %>% mutate_at(vars(Partido_Municipio, Aglomerado), #Dentro de vars() pongo las variables a modificar
+                       ~case_when(. == "" ~ "Sin información", 
+                                  TRUE ~ .)) #Asigno un puntito para referirme a cada variable  
 
 ### 8. Pasar los valores de Partido_Municipio 
 ## a minúscula con ayuda de 
