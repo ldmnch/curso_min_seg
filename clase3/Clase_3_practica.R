@@ -27,14 +27,54 @@ table(base_pufeaf$hubo_fallecidos)
 ### 5. Crear una nueva columna llamada "tipo_fallecidos" que indique si 
 ###el fallecido fue civil interviniente, tercero, víctima o policial.
 
+base_pufeaf <- base_pufeaf %>% mutate(tipo_fallecidos = case_when(
+        Civil_Tercero_Fallecido > 0 | Civil_Interviniente_Fallecido > 0 |
+                Civil_Victima_Fallecido > 0 ~ "Civiles",
+        Personal_Fallecido > 0 & Civil_Tercero_Fallecido > 0 & Civil_Interviniente_Fallecido
+        > 0 & Civil_Victima_Fallecido > 0 ~ "Personal y civiles fallecidos",
+        Personal_Fallecido > 0 ~ "Personal fallecido",
+        TRUE ~ "No"
+))
+table(base_pufeaf$tipo_fallecidos)
 
+### 6. Eliminar las últimas dos columnas del dataframe. 
+ncol(base_pufeaf)
 
-### 5. Eliminar las últimas dos columnas del dataframe. 
+base_pufeaf_2 <- base_pufeaf %>% select(1:25)
 
-### 6. Convertir los NA de las columnas "Aglomerado" y "Partido_municipio" en un "Sin información" 
+base_pufeaf_3 <- base_pufeaf %>% select(-c(tipo_fallecidos, hubo_fallecidos))
 
-### 7. Pasar los valores de todas las columnas a minúscula con ayuda de la función str_to_lower(). 
+x <- base_pufeaf %>% ncol()-2
 
-### 8. Guardar como .csv la última base generada. 
+ncol(base_pufeaf_3)
+rm(base_pufeaf$hubo_fallecidos)
+### 7. Convertir los NA (que son un "") de las columnas "Aglomerado" y "Partido_municipio" 
+## en un "Sin información" 
 
-### 9.. Instalar un paquete que vamos a usar la próxima clase: lubridate. 
+base_pufeaf <- base_pufeaf %>% mutate(Aglomerado = case_when(
+        Aglomerado == "" ~ "Sin información",
+        TRUE ~ Aglomerado),
+        Partido_Municipio = case_when(
+                Partido_Municipio == "" ~ "Sin información",
+                TRUE ~ Partido_Municipio))
+
+table(base_pufeaf$Partido_Municipio)
+
+base_pufeaf <- base_pufeaf %>% mutate(vars(Partido_Municipio),
+                       ~case_when(. == "" ~ "Sin información",
+                               TRUE ~ .)) ## REVISAR
+
+### 8. Pasar los valores de Partido_Municipio 
+## a minúscula con ayuda de 
+## la función str_to_lower(). 
+
+base_pufeaf <- base_pufeaf %>% 
+        mutate(Partido_Municipio = str_to_lower(Partido_Municipio))
+
+table(base_pufeaf$Partido_Municipio)
+### 9. Guardar como .csv la última base generada. 
+
+write_csv(base_pufeaf, "./base_pufeaf_trabajada.csv")
+
+### 10. Instalar un paquete que vamos a usar la próxima clase: lubridate. 
+install.packages("lubridate")

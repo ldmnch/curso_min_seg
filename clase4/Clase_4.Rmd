@@ -47,7 +47,8 @@ El tipo de arma utilizado según la provincia
 ```{r}
 df %>%
         group_by(provincia, clase_arma)%>%
-        summarize(n=n())
+        summarize(n=n()) 
+
 ```
 La media de víctimas según el año: 
 ```{r}
@@ -78,7 +79,7 @@ pivot_longer_resumen <- medidas_resumen%>%
                names_to = "variable", 
                values_to = "valor")
 
-pivot_longer_resumen
+medidas_resumen
 ```
 
 - `pivot_wider` es la operación inversa. Crea variables a partir de filas, y "alarga" la base de datos. 
@@ -90,6 +91,13 @@ pivot_longer_resumen
 pivot_longer_resumen%>% pivot_wider(id_cols= provincia, 
                                 names_from=variable,
                                 values_from = valor)
+```
+```{r}
+df %>%
+        group_by(provincia, clase_arma)%>%
+        summarize(n=n()) %>%
+        pivot_wider(id_cols =provincia, names_from = clase_arma, values_from = n)
+
 ```
 
 ## `join()`
