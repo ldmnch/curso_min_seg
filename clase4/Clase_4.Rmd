@@ -217,6 +217,7 @@ En este material veremos algunas herramientas un poco más avanzadas que sirven 
 - La función *if* se utilizará para correr código condicionalmente.   
 
 - Su funcionamiento es el siguiente:     
+
 ```if(condicion){codigo a ejecutar si se cumple la condición}```
 
 ```{r,warning=FALSE}
@@ -240,10 +241,12 @@ if( 10+5 == 148.24){
 ```if(condicion){codigo a ejecutar si se cumple la condición} else {codigo a ejecutar si NO se cumple la condición}``` 
 
 - Veamos un ejemplo. Queremos que nuestro código nos indique si la fecha de ejecución del código coincide con la de la última actualización de la base de datos. Caso contrario, queremos que se nos indique la diferencia de tiempo entre ambas. 
+
 ```{r}
 ultima.actualiz.base<- max(df$fecha_hecho)
 ultima.actualiz.base
 ```
+
 - ¿Es dicha fecha igual a la fecha actual de ejecución del código? Para ello podemos usar la función **Sys.Date()** de RBase
 ```{r}
 if (ultima.actualiz.base == Sys.Date()) {
@@ -268,8 +271,10 @@ for (x in 1:10){
 ```{r}
 (1:10)*5
 ```
+
 - Los `while` loops empiezan testeando una condición. Si la condición es verdadera ejecutan el bloque de código debajo del `while`.  Una vez que se ejecuta el bloque, se vuelve a testar la condición,
 - Cuando la condición se hace falsa sale del loop.
+
 ```{r, highlight=TRUE, prompt=TRUE, strip.white=FALSE, results='markup', collapse=TRUE, tidy=TRUE}
 count<-0
 while(count < 4){
@@ -277,8 +282,10 @@ while(count < 4){
         count<-count + 1 
 }
 ```
+
 - En los loops existen **estructuras de control** para saltear partes del mismo o salir de él aún cuando la condición que definimos no se cumpla. 
   + ``next`` se usa para saltear una iteración en un loop
+
 ```{r}
 for (i in 1:6){
         if (i<=2){
@@ -297,3 +304,82 @@ for (i in 1:6){
 }
 ```
 
+Una herramienta que vamos a utilizar mucho en estos casos es la función *seq()*, que permite generar una secuencia de números (que vamos a utilizar para iterar). 
+
+### Aplicación sobre una base de datos
+
+Veamos cómo puede ser útil para un procesamiento. 
+
+Si tenemos una base de datos con información sobre distintos tipos de población, podemos querer generar una medida resumen para cada segmento de la población.
+
+```{r}
+vector_valores <- unique(df$provincia)
+
+#En esta lista vamos a guardar nuestros resultados
+datos_graf <- list()
+
+for (valor in (seq(length(vector_valores)))) {
+  
+  tabla_resumen <- df %>% 
+    filter(provincia == vector_valores[valor]) %>%
+    filter(en_ocasion_otro_delito != "Sin determinación") %>%
+    group_by(departamento, en_ocasion_otro_delito) %>% 
+    summarise(n = n(),
+              provincia = unique(provincia))  %>% 
+    pivot_wider(id_cols= c(departamento, provincia), 
+                            names_from = en_ocasion_otro_delito,
+                            values_from = n)
+  
+  datos_graf[[valor]] <-  tabla_resumen
+  
+}
+```
+
+Veamos el resultado de una de las tablas que generamos:
+
+```{r}
+datos_graf[[8]]
+```
+
+## Funciones
+
+Retomamos lo introducido en la clase 2: la función es una forma de encapsular una serie de operaciones a las que vayamos a recurrir más de una vez, esta es su estructura general: 
+
+```{r}
+fun_ej <-function(argumentos){
+	#[se hace algún cómputo]
+}
+```
+
+En este caso, vamos a utilizar esta herramienta (junto con la iteración) para hacer que todas las columnas numéricas de las tablas generadas que tengan `NA` tomen el valor 0 y las tablas se guarden como archivos de Excel en la carpeta data. 
+
+
+```{r}
+library(openxlsx)
+
+funcion_procesamiento <- function(df){
+        
+        df <- df%>% 
+                mutate_at(vars(-c(departamento, provincia)),  ~ case_when(
+                        is.na(.) ~ 0,
+                        TRUE ~ as.numeric(.)
+                ))
+        
+        prov <- unique(df$provincia)
+        
+        write.xlsx(df, file = paste0("./data/delitos_", prov,".xlsx"), append = TRUE)
+}
+
+```
+
+Finalmente, la aplicamos de forma iterativa:
+
+```{r, eval=F}
+
+for (i in seq(length(datos_graf))) {
+  
+  funcion_procesamiento(datos_graf[[i]])
+  
+}
+
+```

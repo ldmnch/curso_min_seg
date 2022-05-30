@@ -24,3 +24,7 @@ df %>% group_by(Mes)%>%
 ###- calcule la cantidad de casos por provincia en caso de que la base de datos tenga menos de 1.000 registros
 
 ### 8. Crear un loop que devuelva los valores de la columna "Provincia" que no son Buenos Aires
+
+for (i in 1:nrow(Base_PUFEAF)){
+        if 
+}

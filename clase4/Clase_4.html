@@ -246,7 +246,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Clase 4</h1>
 <h4 class="author">Domenech Burin, Laia</h4>
-<h4 class="date">27 abril, 2022</h4>
+<h4 class="date">30 mayo, 2022</h4>
 
 </div>
 
@@ -336,21 +336,21 @@ df &lt;- readxl::read_excel(&quot;./data/Integrado_HD_base_usuaria_2017-2020.xls
 pivot_longer_resumen &lt;- medidas_resumen %&gt;%
     pivot_longer(cols = c(media_inc, mediana_inc), names_to = &quot;variable&quot;, values_to = &quot;valor&quot;)
 
-pivot_longer_resumen</code></pre>
-<pre><code>## # A tibble: 48 × 3
-##    provincia              variable    valor
-##    &lt;chr&gt;                  &lt;chr&gt;       &lt;dbl&gt;
-##  1 BUENOS AIRES           media_inc    1.34
-##  2 BUENOS AIRES           mediana_inc  1   
-##  3 CATAMARCA              media_inc    1.38
-##  4 CATAMARCA              mediana_inc  1   
-##  5 CHACO                  media_inc    2.32
-##  6 CHACO                  mediana_inc  2   
-##  7 CHUBUT                 media_inc    1.48
-##  8 CHUBUT                 mediana_inc  1   
-##  9 CIUDAD DE BUENOS AIRES media_inc    1.30
-## 10 CIUDAD DE BUENOS AIRES mediana_inc  1   
-## # … with 38 more rows</code></pre>
+medidas_resumen</code></pre>
+<pre><code>## # A tibble: 24 × 3
+##    provincia              media_inc mediana_inc
+##    &lt;chr&gt;                      &lt;dbl&gt;       &lt;dbl&gt;
+##  1 BUENOS AIRES                1.34           1
+##  2 CATAMARCA                   1.38           1
+##  3 CHACO                       2.32           2
+##  4 CHUBUT                      1.48           1
+##  5 CIUDAD DE BUENOS AIRES      1.30           1
+##  6 CORDOBA                     1.20           1
+##  7 CORRIENTES                  1.71           1
+##  8 ENTRE RIOS                  1.32           1
+##  9 FORMOSA                     1.23           1
+## 10 JUJUY                       2.60           1
+## # … with 14 more rows</code></pre>
 <ul>
 <li><code>pivot_wider</code> es la operación inversa. Crea variables a partir de filas, y “alarga” la base de datos. +<code>id_cols</code>: la columna de ID, que no queremos que pierda su formato +<code>names_from</code>: indico en qué columna están los nombres de las variables
 <ul>
@@ -373,6 +373,28 @@ pivot_longer_resumen</code></pre>
 ##  9 FORMOSA                     1.23           1
 ## 10 JUJUY                       2.60           1
 ## # … with 14 more rows</code></pre>
+<pre class="r"><code>df %&gt;%
+    group_by(provincia, clase_arma) %&gt;%
+    summarize(n = n()) %&gt;%
+    pivot_wider(id_cols = provincia, names_from = clase_arma, values_from = n)</code></pre>
+<pre><code>## # A tibble: 24 × 12
+## # Groups:   provincia [24]
+##    provincia     `Ahorcamiento …` `Arma blanca` `Arma de fuego` `Arrollamiento…`
+##    &lt;chr&gt;                    &lt;int&gt;         &lt;int&gt;           &lt;int&gt;            &lt;int&gt;
+##  1 BUENOS AIRES               117          1882            4669               32
+##  2 CATAMARCA                   10            24              21               NA
+##  3 CHACO                       19           317             305                5
+##  4 CHUBUT                      19           185             124               NA
+##  5 CIUDAD DE BU…               41           283             472                9
+##  6 CORDOBA                     50           250             480                2
+##  7 CORRIENTES                   9           146              92                4
+##  8 ENTRE RIOS                  19           187             213               NA
+##  9 FORMOSA                     10           181              39                2
+## 10 JUJUY                       31            77              52               NA
+## # … with 14 more rows, and 7 more variables: Golpes &lt;int&gt;,
+## #   `Objeto contundente` &lt;int&gt;, `Otra arma o mecanismo` &lt;int&gt;,
+## #   `Precipitación al vacío` &lt;int&gt;, Quemaduras &lt;int&gt;,
+## #   `Sin determinación` &lt;int&gt;, Envenenamiento &lt;int&gt;</code></pre>
 </div>
 <div id="join" class="section level2">
 <h2><code>join()</code></h2>
@@ -522,9 +544,9 @@ fecha_4</code></pre>
 <h3>if</h3>
 <ul>
 <li><p>La función <em>if</em> se utilizará para correr código condicionalmente.</p></li>
-<li><p>Su funcionamiento es el siguiente:<br />
-<code>if(condicion){codigo a ejecutar si se cumple la condición}</code></p></li>
+<li><p>Su funcionamiento es el siguiente:</p></li>
 </ul>
+<p><code>if(condicion){codigo a ejecutar si se cumple la condición}</code></p>
 <pre class="r"><code>if (10 + 5 == 15) {
     print(&quot;Perfecto&quot;)
 }</code></pre>
@@ -553,7 +575,7 @@ ultima.actualiz.base</code></pre>
 } else {
     Sys.Date() - ultima.actualiz.base
 }</code></pre>
-<pre><code>## [1] &quot;-4404291-04-03&quot;</code></pre>
+<pre><code>## [1] &quot;-4404291-05-06&quot;</code></pre>
 </div>
 <div id="loops" class="section level3">
 <h3>loops</h3>
@@ -623,6 +645,45 @@ ultima.actualiz.base</code></pre>
 }</code></pre>
 <pre><code>## [1] 1
 ## [1] 2</code></pre>
+<p>Una herramienta que vamos a utilizar mucho en estos casos es la función <em>seq()</em>, que permite generar una secuencia de números (que vamos a utilizar para iterar).</p>
+</div>
+<div id="aplicación-sobre-una-base-de-datos" class="section level3">
+<h3>Aplicación sobre una base de datos</h3>
+<p>Veamos cómo puede ser útil para un procesamiento.</p>
+<p>Si tenemos una base de datos con información sobre distintos tipos de población, podemos querer generar una medida resumen para cada segmento de la población.</p>
+<pre class="r"><code>vector_valores &lt;- unique(df$provincia)
+
+# En esta lista vamos a guardar nuestros resultados
+datos_graf &lt;- list()
+
+for (valor in (seq(length(vector_valores)))) {
+
+    tabla_resumen &lt;- df %&gt;%
+        filter(provincia == vector_valores[valor]) %&gt;%
+        filter(en_ocasion_otro_delito != &quot;Sin determinación&quot;) %&gt;%
+        group_by(departamento, en_ocasion_otro_delito) %&gt;%
+        summarise(n = n(), provincia = unique(provincia)) %&gt;%
+        pivot_wider(id_cols = c(departamento, provincia), values_from = n, names_from = en_ocasion_otro_delito)
+
+    datos_graf[[valor]] &lt;- tabla_resumen
+
+}</code></pre>
+<p>Veamos el resultado de una de las tablas que generamos:</p>
+<pre class="r"><code>datos_graf[[8]]</code></pre>
+<pre><code>## # A tibble: 10 × 5
+## # Groups:   departamento [10]
+##    departamento provincia `Sí Robo` `No fue en ocasión de otr…` `Si Otro Delito`
+##    &lt;chr&gt;        &lt;chr&gt;         &lt;int&gt;                       &lt;int&gt;            &lt;int&gt;
+##  1 9 de Julio   SAN JUAN          3                          NA               NA
+##  2 Calingasta   SAN JUAN         NA                           2               NA
+##  3 Capital      SAN JUAN          4                           2               NA
+##  4 Caucete      SAN JUAN         15                           2               NA
+##  5 Chimbas      SAN JUAN          6                          18                2
+##  6 Jáchal       SAN JUAN         NA                           2               NA
+##  7 Pocito       SAN JUAN          2                           2               NA
+##  8 Rawson       SAN JUAN         10                          14               NA
+##  9 Rivadavia    SAN JUAN         NA                          NA               12
+## 10 Ullúm        SAN JUAN         NA                           2               NA</code></pre>
 </div>
 </div>
 
