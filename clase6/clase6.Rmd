@@ -66,25 +66,32 @@ library(tidyverse)
 library(ggplot2)
 library(sf)
 ```
-Practicaremos con datos georeferenciados en polígonos: los departamentos de la Provincia de Buenos Aires. 
+
+Practicaremos con datos georeferenciados en polígonos. Vamos a hacer un análisis de la evolución de homicidios dolosos en la región pampeana del país, así que primero vamos a importar un dataframe con los polígonos provinciales. 
 
 ```{r}
-pba_geo <- read_sf("./data/deptos_pba.geojson")
+geo <- read_sf("./data/provincias.geojson")
 ```
 
 Veamos cómo está compuesto este dataframe:
 
 ```{r}
-head(pba_geo)
+head(geo)
 ```
 
 
 La data contiene información básica de cada provincia. Sin embargo, van a ver tiene una columna particular, cuyo formato no habíamos visto aún: `geometry`. Esta columna tiene la información de una serie de puntos que trazan un **polígono**. En otras palabras, contiene la forma de cada provincia Por esto esta variable será fundamental para realizar mapas en R, es el insumo básico de donde el programa saca la información para trazarlos. 
 
+Vamos a filtrar las provincias de interés: 
+
+```{r}
+geo <- geo %>% filter(nomprov %in% c("LA PAMPA", "NEUQUEN", "RIO NEGRO", "CHUBUT", "SANTA CRUZ", "TIERRA DEL FUEGO") )
+```
+
 A partir de esto, graficar un mapa es tan simple como usar dos líneas de ggplot con la geometría `geom_sf`. 
 
 ```{r}
-ggplot(pba_geo)+
+ggplot(geo)+
         geom_sf()
 ```
 
@@ -94,33 +101,31 @@ Con frecuencia vemos información presentada en mapas. Un ejemplo de ellos es el
 
 La forma más común de mostrar información geográfica es a través de **mapas coropléticos**, donde se colorean regiones individualmente de acuerdo a la dimensión de la información que se quiere mostrar. Para hacerlo, nada más hay que asignarle al atributo `fill`la dimensión que queremos plasmar. 
 
-Vamos a agregarle capas de información a nuestro mapa. Por ejemplo, supongamos que queremos ver en el mapa qué departamentos tuvieron una mayor cantidad de homicidios dolosos en el año 2020. Para esto podemos usar la base de datos con la que estuvimos trabajando las últimas clases. Vamos a filtrarla e importar los casos que nos interesan.
+Vamos a agregarle capas de información a nuestro mapa. Por ejemplo, supongamos que queremos ver en el mapa qué provincias tuvieron una mayor cantidad de homicidios dolosos en el año 2020. Para esto podemos usar la base de datos con la que estuvimos trabajando las últimas clases. Vamos a filtrarla e importar los casos que nos interesan.
 
 ```{r}
 df <- readxl::read_xlsx("data/Integrado_HD_base_usuaria_2017-2020.xlsx")
 
 #Formato
-pba <- df %>% filter(provincia == "BUENOS AIRES") 
-
-pba <- pba %>% filter(departamento != "Departamento sin determinar")
-
-pba_2020 <- pba %>% filter(anio == 2020)
+patagonia <- df %>% filter(provincia %in% c("LA PAMPA", "NEUQUEN", "RIO NEGRO", "CHUBUT", "SANTA CRUZ", "TIERRA DEL FUEGO")) 
 ```
 
 Luego, joineamos las dos bases. Una cosa **muy importante** es que siempre hay que poner la base con las geometrías a la izquierda, de lo contrario la columna `geometry` pierde el formato. 
 
 ```{r}
 #Join
-pba_geo_2020 <- pba_geo %>% left_join(pba_2020, by=c("in1"="Cod_INDEC"))
+geo <- geo %>% left_join(patagonia, by=c("nomprov"="provincia"))
 ```
 
-Ahora podemos hacer lo que ya sabemos: agrupar y contar los casos por `Id_hecho`.
+Ahora podemos hacer lo que ya sabemos: filtramos el año, luego agrupamos y contamos los casos por `Id_hecho`.
 
 ```{r}
-tb1 <- pba_geo_2020%>%
-        group_by(anio, nam)%>%
+tb1 <- geo%>%
+        filter(anio == 2020) %>%
+        group_by(nomprov)%>%
         summarise(n=n_distinct(Id_hecho, na.rm = FALSE)) 
 ```
+
 Como estamos trabajando el gráfico con `ggplot`, podemos pasarle el atributo estético `n` al parámetro `fill` para que los polígonos se pinten según la frecuencia de casos.
 
 ```{r}
@@ -129,72 +134,93 @@ ggplot(tb1, aes(fill=n))+
 ```
 
 
-Acá vemos algo, pero las líneas grises que dibujan cada polígono nos dificultan ver los datos con claridad. Vamos a sacar estas líneas asignándole al parámetro `color = NA`:
+Acá ya vemos información. Pero vamos a emprolijar un poco el gráfico borrando líneas grises que dibujan cada polígono.Esto lo hacemos asignándole al parámetro `color = NA`:
 
 ```{r}
 ggplot(tb1)+
         geom_sf(aes(fill = n), color = NA)
 ```
 
-En este mapa, La Matanza destaca como el departamento con mayor cantidad de homicidios en 2020. Sin embargo, algo que no hemos mencionado aún es la importancia de "normalizar" las variables antes de mostrarlas en un mapa. En general, los lugares más grandes van a contener dentro "más" de cualquier variable que los lugares pequeños (sean personas, comercios o accidentes). En este sentido, es de esperar que La Matanza registre más incidentes que los demás departamentos ya que de acuerdo con las proyecciones poblacionales del último censo tiene 2.281.194 de habitantes. Lo que sería más útil aquí es presentar la relación entre homicidios y la cantidad de habitantes. 
+En este mapa, Neuquén destaca como la provincia con mayor cantidad de homicidios en 2020. Sin embargo, algo que no hemos mencionado aún es la importancia de "normalizar" las variables antes de mostrarlas en un mapa. En general, los lugares más grandes van a contener dentro "más" de cualquier variable que los lugares pequeños (sean personas, comercios o accidentes). Lo que sería más útil aquí es presentar la relación entre homicidios y la cantidad de habitantes. 
 
-Por eso vamos a incorporar un dataframe que nos de adicional: las proyecciones poblacionales por departamento. 
+Por eso vamos a incorporar un dataframe que nos de adicional: las proyecciones poblacionales por provincia. 
 
 ```{r}
-proyecciones <- readxl::read_excel("data/proy_1025_depto_buenos_aires.xls") %>% drop_na()
+proyecciones <- read_csv("./data/proyecciones_prov.csv") 
 
-proyecciones_2020 <- proyecciones %>% select(departamento, Proyecciones_2020)
+head(proyecciones)
 
-pba_geo_2020 <- pba_geo_2020 %>% 
-        left_join(proyecciones_2020, by = c("nam" = "departamento"))
+geo <- geo %>% 
+        left_join(proyecciones, by = c("nomprov" = "Provincia", "anio"))
 ```
 
 Ahora sí, vamos a agrupar por año, departamento y tamaño de la población.
 
 ```{r}
-tb2 <- pba_geo_2020%>%
-        group_by(anio, nam, Proyecciones_2020)%>%
-        summarise(n=n_distinct(Id_hecho, na.rm = TRUE)) 
+tb2 <- geo%>%
+        filter(anio == 2020)%>%
+        group_by(nomprov, proy)%>%
+        summarise(n_casos=n_distinct(Id_hecho, na.rm = TRUE)) 
 ```
 Y lo vamos a graficar. 
 
 ```{r}
 ggplot(tb2)+
-        geom_sf(aes(fill = n/Proyecciones_2020), color = NA)
+        geom_sf(aes(fill = n_casos/proy), color = NA)
 ```
 
-Este último gráfico representa de forma mucho mas precisa la distribución homicidios dolosos por habitante en la provincia. Pero tenemos una mejora más por realizar: elegir una escala de color que haga más legible el gráfico, ayudando al ojo a diferenciar las áreas donde la densidad es particularmente alta o baja. Apelamos a ["viridis"](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html), una escala diseñada para ser fácil de interpretar... y lucir bien de paso. Para usar virids, agregamos `scale_fill_viridis_d()` cuando se muestra una variable categórica, y `scale_fill_viridis_c() `cuando se trata de una variable continua, nuestro caso en este momento.
+Este último gráfico representa de forma mucho mas precisa la distribución homicidios dolosos por habitante en cada provincia. Pero tenemos una mejora más por realizar: elegir una escala de color que haga más legible el gráfico, ayudando al ojo a diferenciar las áreas donde la densidad es particularmente alta o baja. Apelamos a ["viridis"](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html), una escala diseñada para ser fácil de interpretar... y lucir bien de paso. Para usar virids, agregamos `scale_fill_viridis_d()` cuando se muestra una variable categórica, y `scale_fill_viridis_c() `cuando se trata de una variable continua, el cual es nuestro caso. 
 
 ```{r}
 library(viridis)
 
 ggplot(tb2)+
-        geom_sf(aes(fill = n/Proyecciones_2020), color = NA)+
-        scale_fill_viridis_c()+
-        labs(title = "Provincia de Buenos Aires",
+        geom_sf(aes(fill = n_casos/proy), color = NA)+
+        scale_fill_viridis_c()
+```
+
+Para cerrar, y dejar nuestro gráfico bien prolijo, vamos a agregarle título, subtítulo y modificar el nombre de la barra de relleno con `labs`. También vamos a sacar la notación científica de los HD/cantidad de habitantes poniendo el parámetro `labels = scales::label_comma()`. Con esto estamos modificando los labels de la barra, y llamamos a la función `label_comma()` del paquete `scales` para poner labels con coma. Finalmente, vamos a sacar las referencias de coordenadas de los ejes x e y con el atributo `axis.text.x=element_blank()` y `axis.ticks.x=element_blank()` para cada eje. 
+
+```{r}
+ggplot(tb2)+
+        geom_sf(aes(fill = n_casos/proy), color = NA)+
+        scale_fill_viridis_c(labels = scales::label_comma())+
+        labs(title = "Región Patagónica",
              subtitle = "Homicidios dolosos en 2020",
              fill = "HD/Cant. habitantes")+
-        theme_minimal()
+        theme_minimal()+
+        theme(axis.text.x=element_blank(), 
+                axis.ticks.x=element_blank(), 
+                axis.text.y=element_blank(),  
+                axis.ticks.y=element_blank()  
+                )
 ```
 
 
-Vemos que parecen otros departamentos en tonos verde agua y amarilllo que nos llaman la atención. A priori podemos ver que los departamentos de Pellegrini, San Pedro, Baradero o Capitán Sarmiento parecen tener una cantidad relativamente más alta de homicidios que los demás departamentos.
+Vemos que si bien Neuquén sigue siendo la provincia con mayor cantidad de casos, Santa Cruz tiene una proporción más alta de casos que la que veíamos en el primer gráfico.
 
 ### Tiempo y espacio
 
 ```{r}
-pufeaf <- readxl::read_xlsx('./data/muertesviales_2017-2020.xlsx')
+tb3 <- geo%>%
+        group_by(anio, nomprov, proy)%>%
+        summarise(n_casos=n_distinct(Id_hecho, na.rm = TRUE)) 
+```
 
-pufeaf <-pufeaf %>% filter(provincia == "BUENOS AIRES")
+```{r}
+ggplot(tb3)+
+        geom_sf(aes(fill = n_casos/proy), color = NA)+
+        scale_fill_viridis_c(labels = scales::label_comma())+
+        facet_grid(cols = vars(anio))+
+        labs(title = "Región Patagónica",
+             subtitle = "Homicidios dolosos 2017-2020",
+             fill = "HD/Cant. habitantes")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank(), 
+                axis.ticks.x=element_blank(), 
+                axis.text.y=element_blank(), 
+                axis.ticks.y=element_blank() 
+                )
 
-pufeaf <- pba_geo %>% 
-        left_join(pufeaf, by = c("nam" = "departamento"))
-
-x <- pufeaf %>% group_by(anio, nam) %>%
-        summarise(n=n_distinct(Id_hecho, na.rm=TRUE))
-
-ggplot(x, aes(fill=n), color=NA)+
-        geom_sf()+
-        facet_wrap(vars(anio))
 ```
 
