@@ -151,7 +151,7 @@ proyecciones <- read_csv("./data/proyecciones_prov.csv")
 head(proyecciones)
 
 geo <- geo %>% 
-        left_join(proyecciones, by = c("nomprov" = "Provincia", "anio"))
+        left_join(proyecciones, by = c("nomprov" = "Provincia", "anio")) #Joineo por provincia y año del registro/proyección
 ```
 
 Ahora sí, vamos a agrupar por año, departamento y tamaño de la población.
@@ -169,7 +169,8 @@ ggplot(tb2)+
         geom_sf(aes(fill = n_casos/proy), color = NA)
 ```
 
-Este último gráfico representa de forma mucho mas precisa la distribución homicidios dolosos por habitante en cada provincia. Pero tenemos una mejora más por realizar: elegir una escala de color que haga más legible el gráfico, ayudando al ojo a diferenciar las áreas donde la densidad es particularmente alta o baja. Apelamos a ["viridis"](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html), una escala diseñada para ser fácil de interpretar... y lucir bien de paso. Para usar virids, agregamos `scale_fill_viridis_d()` cuando se muestra una variable categórica, y `scale_fill_viridis_c() `cuando se trata de una variable continua, el cual es nuestro caso. 
+Este último gráfico representa de forma mucho mas precisa la distribución homicidios dolosos por habitante en cada provincia. Podemos ver que si bien Neuquén sigue teniendo la mayor cantidad de casos, Santa Cruz tiene una relación de homicidios/habitantes un poco más alta de la que veíamos en el gráfico anterior.
+Tenemos una mejora más por realizar: elegir una escala de color que haga más legible el gráfico, ayudando al ojo a diferenciar las áreas donde la densidad es particularmente alta o baja. Apelamos a ["viridis"](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html), una escala diseñada para ser fácil de interpretar... y lucir bien de paso. Para usar virids, agregamos `scale_fill_viridis_d()` cuando se muestra una variable categórica, y `scale_fill_viridis_c() `cuando se trata de una variable continua, el cual es nuestro caso. 
 
 ```{r}
 library(viridis)
@@ -197,15 +198,36 @@ ggplot(tb2)+
 ```
 
 
-Vemos que si bien Neuquén sigue siendo la provincia con mayor cantidad de casos, Santa Cruz tiene una proporción más alta de casos que la que veíamos en el primer gráfico.
 
 ### Tiempo y espacio
+
+Otra cosa que podemos hacer con la información y herramientas que tenemos es mostrar la evolución temporal de los casos a lo largo de los años en todas las provincias. Como tenemos la columna _anio_ podemos utilizarla para agrupar directamente los casos por ella, pero sino podríamos usar `lubridate` para hacer una columna de los años. 
 
 ```{r}
 tb3 <- geo%>%
         group_by(anio, nomprov, proy)%>%
         summarise(n_casos=n_distinct(Id_hecho, na.rm = TRUE)) 
 ```
+Para hacer el gráfico tenemos que replicar el código que veníamos haciendo, pero ahí nos falta introducir la variable `anio`. La vamos a meter agregando la capa `facet_grid()` y pasando dentro el atributo `vars(anio)`.
+
+```{r}
+ggplot(tb3)+
+        geom_sf(aes(fill = n_casos/proy), color = NA)+
+        scale_fill_viridis_c(labels = scales::label_comma())+
+        facet_grid(vars(anio))+
+        labs(title = "Región Patagónica",
+             subtitle = "Homicidios dolosos 2017-2020",
+             fill = "HD/Cant. habitantes")+
+        theme_minimal()+
+        theme(axis.text.x=element_blank(), 
+                axis.ticks.x=element_blank(), 
+                axis.text.y=element_blank(), 
+                axis.ticks.y=element_blank() 
+                )
+
+```
+
+Acá tenemos un problema. Cada una de las facetas es bastante "larga", y por default `facet_grid(vars(anio))` pasa la variable de facetado como filas. Esto lo corregimos asignando la variable de año al atributo `cols`, de la siguiente manera: `facet_grid(cols = vars(anio))`.
 
 ```{r}
 ggplot(tb3)+
@@ -224,3 +246,6 @@ ggplot(tb3)+
 
 ```
 
+Ahora sí, nos queda un gráfico bastante más legible. A grandes rasgos podemos ver que hubo un decrecimiento general en la región de homicidios en el año 2020, probablemente vinculado al contexto de ASPO que inició en marzo. Hasta 2019, Chubut era la provincia que tenía una mayor proporción de homicidios per cápita en la provincia. Pero en 2020 fue superado por Neuquén. 
+
+Ahora, pasemos a la parte práctica.

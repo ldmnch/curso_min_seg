@@ -246,7 +246,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Clase 4</h1>
 <h4 class="author">Domenech Burin, Laia</h4>
-<h4 class="date">30 mayo, 2022</h4>
+<h4 class="date">01 junio, 2022</h4>
 
 </div>
 
@@ -575,7 +575,7 @@ ultima.actualiz.base</code></pre>
 } else {
     Sys.Date() - ultima.actualiz.base
 }</code></pre>
-<pre><code>## [1] &quot;-4404291-05-06&quot;</code></pre>
+<pre><code>## [1] &quot;-4404291-05-08&quot;</code></pre>
 </div>
 <div id="loops" class="section level3">
 <h3>loops</h3>
@@ -606,8 +606,8 @@ ultima.actualiz.base</code></pre>
 <pre class="r"><code>(1:10) * 5</code></pre>
 <pre><code>##  [1]  5 10 15 20 25 30 35 40 45 50</code></pre>
 <ul>
-<li>Los <code>while</code> loops empiezan testeando una condición. Si la condición es verdadera ejecutan el bloque de código debajo del <code>while</code>. Una vez que se ejecuta el bloque, se vuelve a testar la condición,</li>
-<li>Cuando la condición se hace falsa sale del loop.</li>
+<li><p>Los <code>while</code> loops empiezan testeando una condición. Si la condición es verdadera ejecutan el bloque de código debajo del <code>while</code>. Una vez que se ejecuta el bloque, se vuelve a testar la condición.</p></li>
+<li><p>Cuando la condición se hace falsa sale del loop.</p></li>
 </ul>
 <pre class="r"><code>&gt; count &lt;- 0
 &gt; while (count &lt; 4) {
@@ -651,22 +651,24 @@ ultima.actualiz.base</code></pre>
 <h3>Aplicación sobre una base de datos</h3>
 <p>Veamos cómo puede ser útil para un procesamiento.</p>
 <p>Si tenemos una base de datos con información sobre distintos tipos de población, podemos querer generar una medida resumen para cada segmento de la población.</p>
-<pre class="r"><code>vector_valores &lt;- unique(df$provincia)
+<pre class="r"><code>vector_valores &lt;- unique(df$provincia) #Creo un vector con los distintos valores que puede adoptar la columna &quot;provincia&quot;
 
-# En esta lista vamos a guardar nuestros resultados
-datos_graf &lt;- list()
+datos_graf &lt;- list() #En esta lista vamos a guardar nuestros resultados
 
-for (valor in (seq(length(vector_valores)))) {
-
-    tabla_resumen &lt;- df %&gt;%
-        filter(provincia == vector_valores[valor]) %&gt;%
-        filter(en_ocasion_otro_delito != &quot;Sin determinación&quot;) %&gt;%
-        group_by(departamento, en_ocasion_otro_delito) %&gt;%
-        summarise(n = n(), provincia = unique(provincia)) %&gt;%
-        pivot_wider(id_cols = c(departamento, provincia), values_from = n, names_from = en_ocasion_otro_delito)
-
-    datos_graf[[valor]] &lt;- tabla_resumen
-
+for (valor in (seq(length(vector_valores)))) { #Realizo la iteración secuencialmente sobre todos los valores del vector
+  
+  tabla_resumen &lt;- df %&gt;% #Creo la tabla resumen
+    filter(provincia == vector_valores[valor]) %&gt;%
+    filter(en_ocasion_otro_delito != &quot;Sin determinación&quot;) %&gt;%
+    group_by(departamento, en_ocasion_otro_delito) %&gt;% 
+    summarise(n = n(),
+              provincia = unique(provincia))  %&gt;% 
+    pivot_wider(id_cols= c(departamento, provincia), 
+                            names_from = en_ocasion_otro_delito,
+                            values_from = n)
+  
+  datos_graf[[valor]] &lt;-  tabla_resumen #Asigno la tabla a un elemento de la lista
+  
 }</code></pre>
 <p>Veamos el resultado de una de las tablas que generamos:</p>
 <pre class="r"><code>datos_graf[[8]]</code></pre>
@@ -684,6 +686,34 @@ for (valor in (seq(length(vector_valores)))) {
 ##  8 Rawson       SAN JUAN         10                          14               NA
 ##  9 Rivadavia    SAN JUAN         NA                          NA               12
 ## 10 Ullúm        SAN JUAN         NA                           2               NA</code></pre>
+</div>
+<div id="funciones" class="section level3">
+<h3>Funciones</h3>
+<p>Retomamos lo introducido en la clase 2: la función es una forma de encapsular una serie de operaciones a las que vayamos a recurrir más de una vez, esta es su estructura general:</p>
+<pre class="r"><code>fun_ej &lt;- function(argumentos) {
+    # [se hace algún cómputo]
+}</code></pre>
+<p>En este caso, vamos a utilizar esta herramienta (junto con la iteración) para hacer que todas las columnas numéricas de las tablas generadas que tengan <code>NA</code> tomen el valor 0 y las tablas se guarden como archivos de Excel en la carpeta data.</p>
+<pre class="r"><code>library(openxlsx)
+
+funcion_procesamiento &lt;- function(df){
+        
+        df &lt;- df%&gt;% 
+                mutate_at(vars(-c(departamento, provincia)),  ~ case_when(
+                        is.na(.) ~ 0, #Modifico los NA por cero
+                        TRUE ~ as.numeric(.) #Que los valores que no son NA se mantengan como en la columna original
+                ))
+        
+        prov &lt;- unique(df$provincia) #Creo un valor con el nombre de la provincia que está en la base
+        
+        write.xlsx(df, file = paste0(&quot;./data/delitos_&quot;, prov,&quot;.xlsx&quot;), append = TRUE) #Lo escribo en un Excel
+}</code></pre>
+<p>Finalmente, la aplicamos de forma iterativa:</p>
+<pre class="r"><code>for (i in seq(length(datos_graf))) {
+
+    funcion_procesamiento(datos_graf[[i]])  #Aplica la función sobre cada uno de los elementos de la lista data_graf
+
+}</code></pre>
 </div>
 </div>
 
