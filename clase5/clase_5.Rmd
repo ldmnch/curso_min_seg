@@ -304,6 +304,7 @@ ggplot(region_lugar, aes(x=region, y=n, fill=tipo_lugar))+
         x = "Provincia",
         y = "n"
         )+
+        scale_fill_viridis_d()+
         theme_minimal()
 ```
 
