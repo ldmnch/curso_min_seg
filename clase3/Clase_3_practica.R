@@ -48,6 +48,7 @@ x <- base_pufeaf %>% ncol()-2
 
 ncol(base_pufeaf_3)
 rm(base_pufeaf$hubo_fallecidos)
+
 ### 7. Convertir los NA (que son un "") de las columnas "Aglomerado" y "Partido_municipio" 
 ## en un "Sin información" 
 

@@ -324,7 +324,7 @@ Si tenemos una base de datos con información sobre distintos tipos de població
 
 ```{r}
 vector_valores <- unique(df$provincia) #Creo un vector con los distintos valores que puede adoptar la columna "provincia"
-
+vector_valores[2]
 datos_graf <- list() #En esta lista vamos a guardar nuestros resultados
 
 for (valor in (seq(length(vector_valores)))) { #Realizo la iteración secuencialmente sobre todos los valores del vector

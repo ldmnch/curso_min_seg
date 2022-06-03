@@ -105,13 +105,13 @@ df %>% group_by(anio, clase_arma)%>%
 
 ```
 
-Ahora bien, también podemos usar los colores para representar proporciones y cantidades por grupo. Para eso usamos el atributo `fill` en la mayoría de nuestros gráficos. Por ejemplo, vamos a hacer el gráfico de frecuencia de casos anuales pero con la proporción de provincias. Repetimos el primer gráfico que hicimos pero con algunos cambios. Vamos a usar geom_col, asignándole al atributo `fill` la variable provincia, y el valor `fill` al atributo `position` dentro de la geometría. 
+Ahora bien, también podemos usar los colores para representar proporciones y cantidades por grupo. Para eso usamos el atributo `fill` en la mayoría de nuestros gráficos. Por ejemplo, vamos a hacer el gráfico de frecuencia de casos anuales pero con la proporción de regiones Repetimos el primer gráfico que hicimos pero con algunos cambios. Vamos a usar geom_col, asignándole al atributo `fill` la variable región, y el valor `fill` al atributo `position` dentro de la geometría. 
 
 ```{r}
 df %>% group_by(anio, region)%>%
         summarise(n=n_distinct(Id_hecho)) %>%
         ggplot(aes(x=anio, y = n, fill = region))+
-        geom_col(position = "fill")
+        geom_col(position = "stack")
 ```
 
 `position = "fill"` indica que queremos que las categorías de la variable llenen la barra en una proporción de 0 a 1. Los otros dos valores que puede adoptar este argumento son `"stack"` o `"dodge"`. 
@@ -123,7 +123,8 @@ df %>%
         ggplot(aes(x=anio))+
         geom_density()
 ```
-Las ventajas de un gráfico de densidad se ponen de relieve a la hora de comparar los resultados según categorías interenas de la data. Por ejemplo, is queremos mostrar las distintas distribuciones de cantidad de inculpados por provincia, usamos el atributo estético "fill" al igual que con los gráficos de barras. Sería así:
+
+Las ventajas de un gráfico de densidad se ponen de relieve a la hora de comparar los resultados según categorías internas de la data. Por ejemplo, is queremos mostrar las distintas distribuciones de cantidad de inculpados por region, usamos el atributo estético "fill" al igual que con los gráficos de barras. Sería así:
 
 ```{r}
 df %>% 
@@ -164,7 +165,7 @@ df %>% filter(sexo_inculpado %in% c("Femenino", "Masculino"))%>%
 
 Hasta ahora estuvimos trabajando con el atributo estético de los colores y gráficos de barras. Pero estos gráficos no son tan útiles cuando queremos ver la relación que hay entre dos variables numéricas o más. En este caso son útiles los los gráficos de dispersión, o _scatterplots_. Consisten en puntos proyectados en un eje de coordenadas, donde cada punto representa una observación. 
 
-Pongamos un caso concreto: queremos ver la relación entre los casos según año, provincia y cantidad de víctimas. Primero vamos a hacer una operación con group by para obtener la data que nos interesa. 
+Pongamos un caso concreto: queremos ver la relación entre los casos según año, region y cantidad de víctimas. Primero vamos a hacer una operación con group by para obtener la data que nos interesa. 
 
 ```{r}
 vict_prov_anio <- df %>% group_by(anio, region) %>%
@@ -176,7 +177,7 @@ vict_prov_anio <- df %>% group_by(anio, region) %>%
 head(vict_prov_anio)
 ```
 
-Vamos a graficar las tres variables que nos interesan en un **scatterplot** asignando `anio` al eje x, `n` al eje y, `provincia` al atributo `color` y `tasa_vic` al atributo `size`. 
+Vamos a graficar las tres variables que nos interesan en un **scatterplot** asignando `anio` al eje x, `n` al eje y, `region` al atributo `color` y `tasa_vic` al atributo `size`. 
 
 ```{r}
 ggplot(vict_prov_anio, aes(x = anio, y = n, color = region, size = tasa_vic))+
@@ -184,9 +185,7 @@ ggplot(vict_prov_anio, aes(x = anio, y = n, color = region, size = tasa_vic))+
         scale_color_viridis_d(option = "inferno")
 ```
 
-Podemos ver que este gráfico tiene por lo menos un problema que dificulta su lectura. Uno de los más notorios es que existen grandes disparidades en el n de casos: Buenos Aires tiene más de 1500 casos en todos los años, mientras que el resto de las provincias tienen por debajo de 1000. 
-
-En estas situaciones, es útil usar una escala logarítmica para presentar los datos. Esto va a hacer que los valores de un eje no crezcan de manera proporcional, sino en potencias de diez. ¿Para que sirve esto? Para visualizar datos en los que existen grandes disparidades en una variable, porque permite que los valores pequeños tengan espacio para diferenciarse, y a la vez que los muy grandes no aparezcan tan alejados, logrando un gráfico más compacto y en general más legible. 
+Cuando estamos trabajando con datos que tienen grandes disparidades, es útil usar una escala logarítmica para presentarlos. Esto va a hacer que los valores de un eje no crezcan de manera proporcional, sino en potencias de diez. ¿Para que sirve esto? Para visualizar datos en los que existen grandes disparidades en una variable, porque permite que los valores pequeños tengan espacio para diferenciarse, y a la vez que los muy grandes no aparezcan tan alejados, logrando un gráfico más compacto y en general más legible. 
 
 En todo caso, `ggplot2` incluye varias funciones para transformar las escala de las $x$ o de las $y$, entre ellas las que pasan las variables a escala logarítmica de base 10: `scale_x_log10()` y `scale_x_log10()`. ¿Cual usaríamos aquí?
 
@@ -301,7 +300,7 @@ ggplot(region_lugar, aes(x=region, y=n, fill=tipo_lugar))+
         title = "Homcidios dolosos registrados por región",
         subtitle = "2017-2020",
         caption = "Fuente: Ministerio de Seguridad de la Nación",
-        x = "Provincia",
+        x = "Región",
         y = "n"
         )+
         scale_fill_viridis_d()+
