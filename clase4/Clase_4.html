@@ -246,7 +246,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Clase 4</h1>
 <h4 class="author">Domenech Burin, Laia</h4>
-<h4 class="date">01 junio, 2022</h4>
+<h4 class="date">03 junio, 2022</h4>
 
 </div>
 
@@ -551,9 +551,10 @@ fecha_4</code></pre>
     print(&quot;Perfecto&quot;)
 }</code></pre>
 <pre><code>## [1] &quot;Perfecto&quot;</code></pre>
-<pre class="r"><code>if (10 + 5 == 148.24) {
+<pre class="r"><code>if (10 + 5 != 148.24) {
     print(&quot;Error&quot;)
 }</code></pre>
+<pre><code>## [1] &quot;Error&quot;</code></pre>
 </div>
 <div id="if-else" class="section level3">
 <h3>if + else</h3>
@@ -564,9 +565,9 @@ fecha_4</code></pre>
 <ul>
 <li>Veamos un ejemplo. Queremos que nuestro código nos indique si la fecha de ejecución del código coincide con la de la última actualización de la base de datos. Caso contrario, queremos que se nos indique la diferencia de tiempo entre ambas.</li>
 </ul>
-<pre class="r"><code>ultima.actualiz.base &lt;- max(df$fecha_hecho)
+<pre class="r"><code>ultima.actualiz.base &lt;- ymd(max(df$fecha_hecho))
 ultima.actualiz.base</code></pre>
-<pre><code>## [1] &quot;2020-12-31 UTC&quot;</code></pre>
+<pre><code>## [1] &quot;2020-12-31&quot;</code></pre>
 <ul>
 <li>¿Es dicha fecha igual a la fecha actual de ejecución del código? Para ello podemos usar la función <strong>Sys.Date()</strong> de RBase</li>
 </ul>
@@ -575,7 +576,7 @@ ultima.actualiz.base</code></pre>
 } else {
     Sys.Date() - ultima.actualiz.base
 }</code></pre>
-<pre><code>## [1] &quot;-4404291-05-08&quot;</code></pre>
+<pre><code>## Time difference of 519 days</code></pre>
 </div>
 <div id="loops" class="section level3">
 <h3>loops</h3>
@@ -646,6 +647,10 @@ ultima.actualiz.base</code></pre>
 <pre><code>## [1] 1
 ## [1] 2</code></pre>
 <p>Una herramienta que vamos a utilizar mucho en estos casos es la función <em>seq()</em>, que permite generar una secuencia de números (que vamos a utilizar para iterar).</p>
+<pre class="r"><code>vector_ej &lt;- c(1, 2, 7, 5, 8, 9)
+
+seq(length(vector_ej))</code></pre>
+<pre><code>## [1] 1 2 3 4 5 6</code></pre>
 </div>
 <div id="aplicación-sobre-una-base-de-datos" class="section level3">
 <h3>Aplicación sobre una base de datos</h3>

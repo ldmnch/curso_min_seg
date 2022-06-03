@@ -228,7 +228,7 @@ if( 10+5 == 15){
 ```
 
 ```{r,warning=FALSE}
-if( 10+5 == 148.24){
+if( 10+5 != 148.24){
   print("Error")
 }
 
@@ -243,7 +243,7 @@ if( 10+5 == 148.24){
 - Veamos un ejemplo. Queremos que nuestro código nos indique si la fecha de ejecución del código coincide con la de la última actualización de la base de datos. Caso contrario, queremos que se nos indique la diferencia de tiempo entre ambas. 
 
 ```{r}
-ultima.actualiz.base<- max(df$fecha_hecho)
+ultima.actualiz.base<- ymd(max(df$fecha_hecho))
 ultima.actualiz.base
 ```
 
@@ -308,6 +308,13 @@ for (i in 1:6){
 ```
 
 Una herramienta que vamos a utilizar mucho en estos casos es la función *seq()*, que permite generar una secuencia de números (que vamos a utilizar para iterar). 
+
+```{r}
+vector_ej <- c(1, 2, 7, 5, 8, 9)
+
+seq(length(vector_ej))
+```
+
 
 ### Aplicación sobre una base de datos
 
