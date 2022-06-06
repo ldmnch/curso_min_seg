@@ -1,6 +1,5 @@
 ---
 title: "Interactividad en los gráficos"
-author: "Laia Domenech Burin"
 author: "Domenech Burin, Laia"
 output: 
   html_document:
@@ -36,6 +35,16 @@ Lo activamos con:
 library(leaflet)
 ```
 
+A continuación, vamos a importar el paquete  `st` para trabajar con datos geográficos y la tabla con la cantidad de homicidios por provincia en la región de la Patagonia que generamos la última clase.
+
+```{r}
+library(sf)
+
+tb2 <- read_sf("./data/homicidios_prov_patagonia.geojson")
+
+```
+
+
 El uso de `leaflet` es similar al de `ggplot`; uno toma un dataframe y lo muestra mediante capas que exponen distintos aspectos de la información. Para comenzar, usemos `leaflet(tb2)`
 
 ```{r}
@@ -65,8 +74,98 @@ Ahora, vamos a agregarle los polígonos y agregar algunos parámetros para relle
 leaflet(tb2) %>% 
     addTiles() %>% 
     addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 0.8,
-    fillColor = ~pal(n/Proyecciones_2020),
-    label = ~paste0(nam, ": ", round(n/Proyecciones_2020,2)))
+    fillColor = ~pal(n_casos/proy),
+    label = ~paste0(nomprov, ": ", n_casos/proy))
+```
+
+¡Ups! Acá nos encontramos con otro problema, que mencionamos al principio de la clase anterior: las **proyecciones**. Estas no están en el formato que `leaflet` usa: Mercator (EPSG:4326), así que hay que convertirlas usando la función `st_transform()`. Vamos a pasara el parámetro `"+init=epsg:4326"` para pasar la latitud y longitud de estas coordenadas a la proyección correcta. 
+
+```{r}
+tb2<-st_transform(tb2, crs = "+init=epsg:4326")
+```
+
+Y ahora sí, debería funcionar el gráfico: 
+
+```{r}
+leaflet(tb2) %>% 
+    addTiles() %>% 
+    addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 0.8,
+    fillColor = ~pal(n_casos/proy),
+    label = ~paste0(nomprov, ": ", n_casos/proy))
+```
+
+Hasta ahora estuvimos trabajando con mapas cloropléticos. Sin embargo, también podríamos querer trabajar con un nivel de desagregación mayor, como viendo exactamente en qué coordenadas de latitud y longitud suceden los delitos. Esto lo podemos lograr marcando esos puntos en el mapa. 
+
+Para practicar, trabajaremos con un dataset publicado por la Ciudad Autónoma de Buenos Aires, con delitos registrados durante el 2020. Los datos fueron publicados por en el _Mapa del delito_ de la Ciudad (https://mapa.seguridadciudad.gob.ar/). 
+Los más de 70.000 registros del dataset podrían resultar "pesados" para un mapa interactivo si no disponemos de bastante memoria RAM, así que practicaremos con una parte del total: los siniestros viales ocurridos en diciembre.
+
+```{r, eval=TRUE}
+siniestros_viales <- st_read("./data/siniestros_caba.geojson")
+
+head(siniestros_viales)
+```
+
+La primera parte del gráfico va a ser igual al primero que hicimos. Usamos `leaflet(siniestros_viales)` para hacer el mapa interactivo y `addTiles()` para pasar la capa del mundo. Pero también vamos a agregar la capa `addMarkers()`. Con ella, leaflet se encarga de buscar las columnas que contienen coordenadas, y si aparecen con nombres reconocibles en inglés ("latitude" y "longitude", o "lat" y "lng") las identifica automáticamente y sitúa en el mapa un pin por cada fila.
+
+Si las coordenadas aparecen en columnas con otros nombres (así es en nuestro caso, con nombres en castellano tenemos `longitud` en vez de `longitude`), podemos cambiar los nombres a "lat" y "lng", o dejar la data como está e indicarle a `leaflet` cuáles son los nombres vía parámetros. La capa a agregar sería `addMarkers(lat = ~latitud, lng = ~longitud)`. Obsérvese que leaflet requiere usar el simbolillo "\~" antepuesto a los nombres de columna; esto le indica que debe buscar esos nombres dentro del dataframe declarado dentro de la llamada inicial a `leaflet()`.
+
+```{r}
+leaflet(siniestros_viales) %>% 
+    addTiles() %>%
+    addMarkers(lat = ~latitud, lng = ~longitud)
+```
+
+¡Ya tenemos un mapa reconocible! Para mejorarlo, agregamos el parámetro "popup", que permite mostrar información adicional ciando se cliquea sobre un pin. Por ejemplo, el barrio, contenido en la columna "barrio"):
+
+```{r}
+leaflet(siniestros_viales) %>% 
+    addTiles() %>%
+    addMarkers(lat = ~latitud, lng = ~longitud, popup = ~barrio)
+```
+
+Si en vez de "pines" preferimos señalar las posiciones con puntos usamos `addCircleMarkers()` en lugar de `addMarkers()`:
+
+```{r}
+leaflet(siniestros_viales) %>% 
+    addTiles() %>%
+    addCircleMarkers(lat = ~latitud, lng = ~longitud, popup = ~barrio)
+```
+
+Digamos que nos interesa mostrar la variable "tipo", que es categórica: distingue entre siniestros que causaron muertes y aquellos que sólo provocaron lesiones. Para crearle una paleta, dado que se trata de una variable categórica, debemos usar:
+
+```{r}
+paleta <- colorFactor(palette = "Set1", domain = siniestros_viales$tipo)
+```
+
+Y luego usamos la paleta ad-hoc en nuestro mapa, asignando `paleta(tipo)` al parámetro "color" :
+
+```{r}
+leaflet(siniestros_viales) %>% 
+    addTiles() %>%
+    addCircleMarkers(lat = ~latitud, lng = ~longitud, popup = ~tipo, 
+                     color = ~paleta(tipo))
+```
+
+También podemos mostrar valores numérico usando el tamaño de los círculos, haciendo que varíen en tamaño para mostrar distintas cantidades. Aquí hay un ligero problema, y es que `leaflet` es literal con el tamaño: si en una fila la variable a mostrar toma el valor "10", su círculo se dibujará en pantalla con unos 10 píxeles de radio. Si el valor es "10.000", los círculos tendrán ese radio aproximado en píxeles y ya ni siquiera entrarán en una pantalla normal. Por eso, al igual que con los colores, suele ser necesario crear alguna escala ad-hoc. En nuestro caso, la única columna que indica cantidades es... "cantidad", que registra el número de personas fallecidas en cada incidente. Los única valores que toma son "NA" (sin fallecidos), 1, ó 2. Para una puesta en pantalla razonable, podemos asignar al parámetro `radius` el resultado de `cantidad * 10`:
+
+```{r}
+leaflet(siniestros_viales) %>% 
+    addTiles() %>%
+    addCircleMarkers(lat = ~latitud, lng = ~longitud, popup = ~paste("víctimas fatales:", as.character(cantidad)), 
+                     color = ~paleta(tipo), radius = ~cantidad * 10)
+```
+
+Los siniestros viales sin víctimas fatales, al tener vacía la columna "cantidad" aparecen de tamaño ínfimo, casi invisibles. Prueben jugar con el valor de "radius", asignado por ejempo `cantidad` (sin multiplicar) para ver que pasa.
+
+
+También es útil agregar una leyenda que explique la codificación de los datos. `leaflet` sólo permite mostrar leyendas basadas en color (no en el tamaño de los círculos), pero algo es algo. Agregamos la leyenda con `addLegend()`, especificando su título, la columna que contiene los valores, y la paleta que los representa:
+
+```{r}
+leaflet(siniestros_viales) %>% 
+    addTiles() %>%
+    addCircleMarkers(lat = ~latitud, lng = ~longitud, popup = ~paste("víctimas fatales:", as.character(cantidad)),
+                     color = ~paleta(tipo), radius = ~cantidad * 10) %>% 
+    addLegend(title = "Tipo de siniestro vial", pal = paleta, values = ~tipo)
 ```
 
 #### Interactividad en `ggplot`
@@ -82,14 +181,22 @@ Ahora solo necesitamos dos cosas:
 - guardar el resultado de nuestra visualización en una variable, que llamaremos -por elegir algo- “p”
 - pasar la variable que contiene la visualización a la función ggplotly, que la convertirá en una versión interactiva.
 
-Y eso es todo. Vamos a intentarlo replicando el gráfico de víctimas provinciales por año que realizamos anteriormente:
+Y eso es todo. Vamos a intentarlo haciendo un gráfico de cómo evoluciona la relación entre cantidad de víctimas/homicidio por provincia a lo largo de los años:
 
 ```{r}
-vict_prov_anio <- df %>% group_by(anio, provincia) %>%
-         summarise(n = n_distinct(Id_hecho), #Cuento la cantidad de Id_hechos 
-                   tot_vic = sum(cant_vic))%>% #Cuento la cantidad de víctimas
-         ungroup()%>%
-         mutate(tasa_vic = tot_vic/n) 
+library(tidyverse)
+
+df <- readxl::read_excel('./data/Integrado_HD_base_usuaria_2017-2020.xlsx')
+
+vict_prov_anio <- df %>% select(anio, provincia, Id_hecho, cant_vic) %>%
+                        unique() %>% #Borro los valores duplicados, de manera que cada fila es un homicidio
+                        group_by(anio, provincia) %>%
+                        summarise(n = n(), #Cantidad de hechos
+                                  tot_vic = sum(cant_vic))%>% #Cantidad de víctimas
+                        ungroup()%>%
+                        mutate(tasa_vic = tot_vic/n)
+
+head(vict_prov_anio)
 
 p <- ggplot(vict_prov_anio, aes(x = anio, y = n, color = provincia, size = tasa_vic))+
          geom_point()+
@@ -99,3 +206,5 @@ p <- ggplot(vict_prov_anio, aes(x = anio, y = n, color = provincia, size = tasa_
 ggplotly(p)
 ```
 
+
+Estos pasos los podemos replicar para casi cualquier gráfico de `ggplot`. Ahora que tenemos las herramientas necesarias para hacer gráficos interactivos, pasemos a la parte práctica.

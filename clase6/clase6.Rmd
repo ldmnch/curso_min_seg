@@ -1,5 +1,5 @@
 ---
-title: "Clase 6 - Mapas e interactividad"
+title: "Clase 6 - Mapas"
 author: "Domenech Burin, Laia"
 output: 
   html_document:
@@ -67,7 +67,7 @@ library(ggplot2)
 library(sf)
 ```
 
-Practicaremos con datos georeferenciados en polígonos. Vamos a hacer un análisis de la evolución de homicidios dolosos en la región pampeana del país, así que primero vamos a importar un dataframe con los polígonos provinciales. 
+Practicaremos con datos georeferenciados en polígonos. Vamos a hacer un análisis de la evolución de homicidios dolosos en la región pampeana del país, así que primero vamos a importar un dataframe con los polígonos provinciales con la función `read_sf`. 
 
 ```{r}
 geo <- read_sf("./data/provincias.geojson")
@@ -85,7 +85,7 @@ La data contiene información básica de cada provincia. Sin embargo, van a ver 
 Vamos a filtrar las provincias de interés: 
 
 ```{r}
-geo <- geo %>% filter(nomprov %in% c("LA PAMPA", "NEUQUEN", "RIO NEGRO", "CHUBUT", "SANTA CRUZ", "TIERRA DEL FUEGO") )
+geo <- geo %>% filter(nomprov %in% c("NEUQUEN", "RIO NEGRO", "CHUBUT", "SANTA CRUZ", "TIERRA DEL FUEGO") )
 ```
 
 A partir de esto, graficar un mapa es tan simple como usar dos líneas de ggplot con la geometría `geom_sf`. 
@@ -107,7 +107,7 @@ Vamos a agregarle capas de información a nuestro mapa. Por ejemplo, supongamos 
 df <- readxl::read_xlsx("data/Integrado_HD_base_usuaria_2017-2020.xlsx")
 
 #Formato
-patagonia <- df %>% filter(provincia %in% c("LA PAMPA", "NEUQUEN", "RIO NEGRO", "CHUBUT", "SANTA CRUZ", "TIERRA DEL FUEGO")) 
+patagonia <- df %>% filter(provincia %in% c("NEUQUEN", "RIO NEGRO", "CHUBUT", "SANTA CRUZ", "TIERRA DEL FUEGO")) 
 ```
 
 Luego, joineamos las dos bases. Una cosa **muy importante** es que siempre hay que poner la base con las geometrías a la izquierda, de lo contrario la columna `geometry` pierde el formato. 
@@ -169,7 +169,8 @@ ggplot(tb2)+
         geom_sf(aes(fill = n_casos/proy), color = NA)
 ```
 
-Este último gráfico representa de forma mucho mas precisa la distribución homicidios dolosos por habitante en cada provincia. Podemos ver que si bien Neuquén sigue teniendo la mayor cantidad de casos, Santa Cruz tiene una relación de homicidios/habitantes un poco más alta de la que veíamos en el gráfico anterior.
+Este último gráfico representa de forma mucho mas precisa la distribución homicidios dolosos por habitante en cada provincia. Podemos ver que si bien Neuquén sigue teniendo la mayor cantidad de casos, Río Negro tiene una relación de homicidios/habitantes un poco más baja de la que veíamos en el gráfico anterior.
+
 Tenemos una mejora más por realizar: elegir una escala de color que haga más legible el gráfico, ayudando al ojo a diferenciar las áreas donde la densidad es particularmente alta o baja. Apelamos a ["viridis"](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html), una escala diseñada para ser fácil de interpretar... y lucir bien de paso. Para usar virids, agregamos `scale_fill_viridis_d()` cuando se muestra una variable categórica, y `scale_fill_viridis_c() `cuando se trata de una variable continua, el cual es nuestro caso. 
 
 ```{r}
@@ -247,5 +248,11 @@ ggplot(tb3)+
 ```
 
 Ahora sí, nos queda un gráfico bastante más legible. A grandes rasgos podemos ver que hubo un decrecimiento general en la región de homicidios en el año 2020, probablemente vinculado al contexto de ASPO que inició en marzo. Hasta 2019, Chubut era la provincia que tenía una mayor proporción de homicidios per cápita en la provincia. Pero en 2020 fue superado por Neuquén. 
+
+Como paso final, vamos a exportar la tabla donde generamos los datos del gráfico 2 usando la función `st_write`: 
+
+```{r}
+st_write(tb2, "./data/homicidios_prov_patagonia.geojson") 
+```
 
 Ahora, pasemos a la parte práctica.

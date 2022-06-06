@@ -50,3 +50,11 @@ Para empezar el curso es necesario que primero descarguen R y RStuido. [Aquí ti
 - Parámetros de los gráficos: Leyendas, ejes, títulos, notas, colores, escala
 
 [![](imgs/Download.png)](./clase5/clase5.zip)
+
+### Clase 6. Visualización de mapas
+- Introducción a los datos georreferenciados.
+- Paquete sf. 
+
+[![](imgs/Download.png)](./clase6/clase6.zip)
+
+
