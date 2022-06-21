@@ -57,4 +57,10 @@ Para empezar el curso es necesario que primero descarguen R y RStuido. [Aquí ti
 
 [![](imgs/Download.png)](./clase6/clase6.zip)
 
+### Clase 7. Interactividad en los gráficos
+- Uso de leaflet()
+- Uso de ggplotly()
+
+[![](imgs/Download.png)](./clase7/clase7.zip)
+
 
