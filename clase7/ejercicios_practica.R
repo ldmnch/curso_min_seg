@@ -6,4 +6,3 @@
 #3. Realice un gráfico interactivo mostrando cómo se distribuyen los distintos tipos de delitos entre los barrios.
 
 # 4. Realice un gráfico interactivo mostrando cómo evoluciona la cantidad de crímenes por barrio a lo largo del año.
-

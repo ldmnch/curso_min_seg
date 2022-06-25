@@ -1,0 +1,29 @@
+---
+title: "Clase 8"
+author: "Laia Domenech Burin"
+date: "25/6/2022"
+output: html_document
+---
+Markdown ofrece una versión estandarizada para formateo de texto. Por ejemplo:
+
+- *De esta manera puedo escribir en itálica* (También puede ser con _un guión_)
+- **Así puedo escribir en negrita** (También puede ser con __dos guiones__)
+- `Así puedo escribir código`
+- Así puedo incluir un [hipervínculo](https://www.youtube.com/watch?v=wvz97-lNPH8)
+- Con esto puedo agregar una nota al pie [^1]
+- Así puedo escribir ecuaciones: $E = mc^{2}$ [^2]
+
+
+![Así puedo incluir una imagen, que debe estar almacenada en el directorio del documento RMD](./Minseguridadarg.png){width=60%}
+
+
+[^1]: Esta es la nota al pie
+[^2]: [Sintaxis para ecuaciones](https://rpruim.github.io/s341/S19/from-class/MathinRmd.html)
+
+Cualquier valor que tenga almacenado como objeto puede ser impreso. 
+
+```{r ejemplo}
+despedida <- "Por ejemplo, les muestro esto y damos por terminada hoy la última lección del curso :)"
+```
+
+`r despedida`

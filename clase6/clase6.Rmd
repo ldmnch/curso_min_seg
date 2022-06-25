@@ -5,16 +5,13 @@ output:
   html_document:
     toc: TRUE
     toc_float: TRUE
+    theme: flatly
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-theme: Boadilla
+
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo=FALSE)
-```
-
-```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
-knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, collapse=TRUE, highlight=TRUE, paged.print=FALSE, prompt=TRUE, strip.white=FALSE)
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE)
 ```
 
 ## Mirando al espacio
@@ -75,7 +72,7 @@ geo <- read_sf("./data/provincias.geojson")
 
 Veamos cómo está compuesto este dataframe:
 
-```{r}
+```{r head data, eval=FALSE, include=FALSE}
 head(geo)
 ```
 
@@ -252,7 +249,7 @@ Ahora sí, nos queda un gráfico bastante más legible. A grandes rasgos podemos
 Como paso final, vamos a exportar la tabla donde generamos los datos del gráfico 2 usando la función `st_write`: 
 
 ```{r}
-st_write(tb2, "./data/homicidios_prov_patagonia.geojson") 
+#st_write(tb2, "./data/homicidios_prov_patagonia.geojson") 
 ```
 
 Ahora, pasemos a la parte práctica.

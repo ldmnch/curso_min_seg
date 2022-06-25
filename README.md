@@ -64,3 +64,12 @@ Para empezar el curso es necesario que primero descarguen R y RStuido. [Aquí ti
 [![](imgs/Download.png)](./clase7/clase7.zip)
 
 
+### Clase 8. Informes
+- Uso de RMarkdown
+
+[![](imgs/Download.png)](./clase8/clase8.zip)
+
+# Trabajo final
+
+[Consignas.](./Min Seg - Consigna trabajo final.pdf)
+
